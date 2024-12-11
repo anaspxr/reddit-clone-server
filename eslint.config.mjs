@@ -9,7 +9,15 @@ export default [
   { languageOptions: { globals: globals.node } },
   {
     rules: {
-      "no-unused-vars": "error",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn", // or "error"
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "prefer-const": ["error", { ignoreReadBeforeAssign: true }],
     },
   },
