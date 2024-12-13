@@ -3,6 +3,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDb from "./configs/connectDb";
 import addStandardResponse from "./middlewares/addStandardResponse";
+import authRouter from "./routes/authRoutes";
+import { CustomError } from "./lib/customErrors";
+import globalErrorHandler from "./middlewares/globalErrorHandler";
 
 dotenv.config();
 
@@ -15,9 +18,13 @@ app.use(express.json());
 
 app.use(addStandardResponse);
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+app.use("/api/auth", authRouter);
+
+app.use("*", (req, res, next) => {
+  next(new CustomError(`Cannot ${req.method} ${req.originalUrl}`, 404));
 });
+
+app.use(globalErrorHandler);
 
 connectDb();
 
