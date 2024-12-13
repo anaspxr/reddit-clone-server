@@ -6,7 +6,7 @@ declare namespace Express {
     standardResponse: (
       statusCode: number,
       message: string,
-      data: unknown
+      data?: unknown
     ) => void;
   }
   export interface Request {

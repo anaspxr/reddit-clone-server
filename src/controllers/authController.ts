@@ -7,6 +7,12 @@ import bcrypt from "bcryptjs";
 import { HydratedDocument } from "mongoose";
 
 export const userRegister = async (req: Request, res: Response) => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new CustomError("Secret key was not loaded", 500);
+  }
+
   const { email, password, username } = registerSchema.parse(req.body);
 
   const usernameExists = await User.findOne({ username });
@@ -29,7 +35,7 @@ export const userRegister = async (req: Request, res: Response) => {
     username,
   });
 
-  const token = createAccessToken(user._id.toString());
+  const token = createAccessToken(user._id.toString(), secret);
 
   res.cookie("token", token, {
     httpOnly: true,
@@ -37,7 +43,7 @@ export const userRegister = async (req: Request, res: Response) => {
     sameSite: "none",
   });
 
-  const refreshToken = createRefreshToken(user._id.toString());
+  const refreshToken = createRefreshToken(user._id.toString(), secret);
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -51,6 +57,12 @@ export const userRegister = async (req: Request, res: Response) => {
 };
 
 export const userLogin = async (req: Request, res: Response) => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new CustomError("Secret key was not loaded", 500);
+  }
+
   const { email, password } = loginSchema.parse(req.body);
 
   let user: HydratedDocument<IUser> | null = null;
@@ -71,7 +83,7 @@ export const userLogin = async (req: Request, res: Response) => {
     throw new CustomError("Password is Incorrect!", 400);
   }
 
-  const token = createAccessToken(user._id.toString());
+  const token = createAccessToken(user._id.toString(), secret);
 
   res.cookie("token", token, {
     httpOnly: true,
@@ -79,7 +91,7 @@ export const userLogin = async (req: Request, res: Response) => {
     sameSite: "none",
   });
 
-  const refreshToken = createRefreshToken(user._id.toString());
+  const refreshToken = createRefreshToken(user._id.toString(), secret);
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
