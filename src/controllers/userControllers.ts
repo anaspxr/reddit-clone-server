@@ -48,3 +48,15 @@ export const changePassword = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Password updated successfully");
 };
+
+export const hydrateUser = async (req: Request, res: Response) => {
+  const user = await User.findById(req.user);
+
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  const { password: _, ...userData } = user.toObject();
+
+  res.standardResponse(200, "User data fetched", userData);
+};

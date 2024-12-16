@@ -39,7 +39,7 @@ export const userRegister = async (req: Request, res: Response) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "none",
   });
 
@@ -47,7 +47,7 @@ export const userRegister = async (req: Request, res: Response) => {
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "none",
   });
 
@@ -56,6 +56,7 @@ export const userRegister = async (req: Request, res: Response) => {
   res.standardResponse(201, "User created", userData);
 };
 
+//
 export const userLogin = async (req: Request, res: Response) => {
   const secret = process.env.JWT_SECRET;
 
@@ -87,7 +88,7 @@ export const userLogin = async (req: Request, res: Response) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "none",
   });
 
@@ -95,11 +96,19 @@ export const userLogin = async (req: Request, res: Response) => {
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "none",
   });
 
   const { password: _, ...userData } = user.toObject();
 
-  res.standardResponse(200, "User logged in", { userData });
+  res.standardResponse(200, "User logged in", userData);
+};
+
+//
+export const userLogout = async (req: Request, res: Response) => {
+  res.clearCookie("token");
+  res.clearCookie("refreshToken");
+
+  res.standardResponse(200, "User logged out");
 };
