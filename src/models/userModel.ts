@@ -7,6 +7,7 @@ export interface IUser {
   password: string;
   avatar?: string;
   banner?: string;
+  about?: string;
   isBanned: boolean;
 }
 
@@ -22,6 +23,7 @@ const userSchema = new Schema<IUser>(
         return this.username;
       },
     },
+    about: String,
     isBanned: { type: Boolean, default: false },
     avatar: String,
     banner: String,

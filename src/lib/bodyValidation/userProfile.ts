@@ -10,6 +10,10 @@ export const displayNameSchema = z.object({
     .min(3),
 });
 
+export const aboutSchema = z.object({
+  about: z.string(),
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string(),
   newPassword: z

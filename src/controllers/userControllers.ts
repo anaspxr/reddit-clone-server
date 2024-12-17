@@ -1,4 +1,5 @@
 import {
+  aboutSchema,
   changePasswordSchema,
   displayNameSchema,
 } from "../lib/bodyValidation/userProfile";
@@ -23,6 +24,24 @@ export const updateDisplayName = async (req: Request, res: Response) => {
   }
 
   res.standardResponse(200, "Display name updated", user);
+};
+
+export const updateAbout = async (req: Request, res: Response) => {
+  const { about } = aboutSchema.parse(req.body);
+
+  const user = await User.findByIdAndUpdate(
+    req.user,
+    {
+      about,
+    },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  res.standardResponse(200, "About description updated", user);
 };
 
 export const changePassword = async (req: Request, res: Response) => {
