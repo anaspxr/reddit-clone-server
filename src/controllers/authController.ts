@@ -51,9 +51,7 @@ export const userRegister = async (req: Request, res: Response) => {
     sameSite: "none",
   });
 
-  const { password: _, ...userData } = user.toObject();
-
-  res.standardResponse(201, "User created", userData);
+  res.standardResponse(201, "User created", { username, email });
 };
 
 //
@@ -100,9 +98,15 @@ export const userLogin = async (req: Request, res: Response) => {
     sameSite: "none",
   });
 
-  const { password: _, ...userData } = user.toObject();
+  {
+    const { username, email, avatar } = user.toObject();
 
-  res.standardResponse(200, "User logged in", userData);
+    res.standardResponse(200, "User logged in", {
+      username,
+      email,
+      avatar,
+    });
+  }
 };
 
 //

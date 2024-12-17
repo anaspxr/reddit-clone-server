@@ -19,8 +19,6 @@ const globalErrorHandler = (
     // handle zod errors (possibly from body validation)
     const { data, message, statusCode } = handleZodErrors(err);
     res.standardResponse(statusCode, message, data);
-  } else if (err.message) {
-    res.standardResponse(500, err.message);
   } else {
     res.standardResponse(500, "Internal Server Error");
     return;

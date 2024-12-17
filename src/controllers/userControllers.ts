@@ -56,7 +56,7 @@ export const hydrateUser = async (req: Request, res: Response) => {
     throw new CustomError("User not found", 404);
   }
 
-  const { password: _, ...userData } = user.toObject();
+  const { username, email, avatar } = user.toObject();
 
-  res.standardResponse(200, "User data fetched", userData);
+  res.standardResponse(200, "User data fetched", { username, email, avatar });
 };

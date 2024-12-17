@@ -12,12 +12,12 @@ export const verifyAuthorization = (
     const token: string = req.cookies.token;
 
     if (!token)
-      throw new CustomError("Unauthorized", 401, { code: "SESSION_ENDED" });
+      throw new CustomError("Unauthorized", 401, { code: "NOT_LOGGED_IN" });
 
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
-      throw new CustomError("Secret key was not loaded", 500);
+      throw new CustomError("Internal server error", 500);
     }
 
     // verify access token
