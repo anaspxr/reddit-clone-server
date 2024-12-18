@@ -1,11 +1,75 @@
 import { Response, Request } from "express";
-import { loginSchema, registerSchema } from "../lib/bodyValidation/auth";
+import {
+  loginSchema,
+  otpSchema,
+  registerSchema,
+  verifyOtpSchema,
+} from "../lib/bodyValidation/auth";
 import { IUser, User } from "../models/userModel";
+import { Otp } from "../models/otpModel";
 import { CustomError } from "../lib/customErrors";
 import { createAccessToken, createRefreshToken } from "../lib/jwt";
 import bcrypt from "bcryptjs";
 import { HydratedDocument } from "mongoose";
+import otpGenerator from "otp-generator";
+import { sendRegisterOtpMail } from "../lib/mailSender";
 
+// send otp to email for registration
+export const sendOtpForRegister = async (req: Request, res: Response) => {
+  const { email } = otpSchema.parse(req.params);
+
+  const emailExists = await User.findOne({ email });
+
+  if (emailExists) {
+    throw new CustomError("Email already exists, Please login", 400);
+  }
+
+  const otp = otpGenerator.generate(6, {
+    digits: true,
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 5); // 5 minutes
+
+  await Otp.findOneAndDelete({ email }); // delete any existing otp for the email if it exists
+
+  await Otp.create({ email, otp, expiresAt });
+
+  await sendRegisterOtpMail(email, otp);
+
+  res.standardResponse(200, "OTP sent to email");
+};
+
+// verify otp that was sent to email
+export const verifyOtpForRegister = async (req: Request, res: Response) => {
+  const { email, otp } = verifyOtpSchema.parse(req.body);
+
+  const otpDoc = await Otp.findOne({ email });
+
+  if (!otpDoc) {
+    throw new CustomError("OTP not found", 400);
+  }
+
+  if (otpDoc.verified) {
+    throw new CustomError("OTP already verified", 400);
+  }
+
+  if (otpDoc.expiresAt < new Date()) {
+    throw new CustomError("OTP expired", 400);
+  }
+
+  if (otpDoc.otp !== otp) {
+    throw new CustomError("OTP is incorrect", 400);
+  }
+
+  await otpDoc.updateOne({ verified: true });
+
+  res.standardResponse(200, "OTP verified");
+};
+
+// register the user with verified email
 export const userRegister = async (req: Request, res: Response) => {
   const secret = process.env.JWT_SECRET;
 
@@ -25,6 +89,12 @@ export const userRegister = async (req: Request, res: Response) => {
 
   if (emailExists) {
     throw new CustomError("Email already exists", 400);
+  }
+
+  const otpVerified = await Otp.findOne({ email, verified: true });
+
+  if (!otpVerified) {
+    throw new CustomError("Email not verified", 400);
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -54,7 +124,7 @@ export const userRegister = async (req: Request, res: Response) => {
   res.standardResponse(201, "User created", { username, email });
 };
 
-//
+// user login
 export const userLogin = async (req: Request, res: Response) => {
   const secret = process.env.JWT_SECRET;
 
