@@ -12,7 +12,7 @@ export const verifyAuthorization = (
     const token: string = req.cookies.token;
 
     if (!token)
-      throw new CustomError("Unauthorized", 401, { code: "NOT_LOGGED_IN" });
+      throw new CustomError("Unauthorized", 401, { code: "NO_TOKEN" });
 
     const secret = process.env.JWT_SECRET;
 
@@ -31,43 +31,42 @@ export const verifyAuthorization = (
       }
 
       if (error) {
-        if (error.name === "TokenExpiredError") {
-          //if token is expired, verify refresh token and issue new access token
-          const refreshToken: string = req.cookies.refreshToken;
-          if (!refreshToken) {
+        //if token is expired, verify refresh token and issue new access token
+        const refreshToken: string = req.cookies.refreshToken;
+        if (!refreshToken) {
+          throw new CustomError("Unauthorized", 401, {
+            code: "NO_TOKEN",
+          });
+        }
+
+        jwt.verify(refreshToken, secret, (error, decodedRT) => {
+          // issue new access token
+          if (decodedRT) {
+            const { userId } = decodedRT as { userId: string };
+            const newToken = createAccessToken(userId, secret);
+
+            // set the new token in the cookie
+            res.cookie("token", newToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "none",
+            });
+
+            // set the user id in the request object and move to the next middleware
+            req.user = userId;
+            next();
+            return;
+          }
+          // if there are any errors, tell the user to login again
+          if (error) {
+            if (error instanceof jwt.TokenExpiredError) {
+              throw new CustomError("TOKEN_EXPIRED", 401);
+            }
             throw new CustomError("Unauthorized", 401, {
-              code: "SESSION_ENDED",
+              code: "INVALID_TOKEN",
             });
           }
-
-          jwt.verify(refreshToken, secret, (error, decodedRT) => {
-            // issue new access token
-            if (decodedRT) {
-              const { userId } = decodedRT as { userId: string };
-              const newToken = createAccessToken(userId, secret);
-
-              // set the new token in the cookie
-              res.cookie("token", newToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "none",
-              });
-
-              // set the user id in the request object and move to the next middleware
-              req.user = userId;
-              next();
-              return;
-            }
-            // if there are any errors, tell the user to login again
-            if (error) {
-              throw new CustomError(error.message, 401, {
-                code: "SESSION_ENDED",
-              });
-            }
-          });
-        } else {
-          throw new CustomError("Unauthorized", 401, { code: "SESSION_ENDED" });
-        }
+        });
       }
     });
   } catch (error) {
