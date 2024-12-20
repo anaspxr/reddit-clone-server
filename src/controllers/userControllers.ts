@@ -79,3 +79,39 @@ export const hydrateUser = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "User data fetched", { username, email, avatar });
 };
+
+export const updateAvatar = async (req: Request, res: Response) => {
+  const imageUrl = req.body.cloudinaryUrl;
+
+  if (!imageUrl) {
+    throw new CustomError("No files uploaded", 400);
+  }
+
+  const user = await User.findByIdAndUpdate(req.user, {
+    avatar: imageUrl,
+  });
+
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  res.standardResponse(200, "Avatar updated", { avatar: imageUrl });
+};
+
+export const updateBanner = async (req: Request, res: Response) => {
+  const imageUrl = req.body.cloudinaryUrl;
+
+  if (!imageUrl) {
+    throw new CustomError("No files uploaded", 400);
+  }
+
+  const user = await User.findByIdAndUpdate(req.user, {
+    banner: imageUrl,
+  });
+
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  res.standardResponse(200, "Banner updated", { banner: imageUrl });
+};

@@ -9,6 +9,7 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 import userRouter from "./routes/userRoutes";
 import publicRouter from "./routes/publicRoutes";
 import cookieParser from "cookie-parser";
+import postRouter from "./routes/postRoutes";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(addStandardResponse);
@@ -30,6 +32,7 @@ app.use(addStandardResponse);
 app.use("/api/auth", authRouter);
 app.use("/api/public", publicRouter); // handle public routes that does not require authentication
 app.use("/api/user", userRouter);
+app.use("/api/post", postRouter);
 
 app.use("*", (req, res, next) => {
   next(new CustomError(`Cannot ${req.method} ${req.originalUrl}`, 404));
