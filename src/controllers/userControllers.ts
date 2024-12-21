@@ -7,6 +7,8 @@ import { Request, Response } from "express";
 import { User } from "../models/userModel";
 import { CustomError } from "../lib/customErrors";
 import bcrypt from "bcryptjs";
+import { v2 as cloudinary } from "cloudinary";
+import { ENV } from "../configs/env";
 
 export const updateDisplayName = async (req: Request, res: Response) => {
   const { displayName } = displayNameSchema.parse(req.body);
@@ -95,6 +97,16 @@ export const updateAvatar = async (req: Request, res: Response) => {
     throw new CustomError("User not found", 404);
   }
 
+  // extracting the public id of the previous avatar asset
+  const publicId =
+    user.avatar?.includes("cloudinary") &&
+    `${ENV.CLOUDINARY.FOLDER}/avatars/${user.avatar.split("/").pop()?.split(".")[0]}`;
+  // findByIdAndUpdate() method returns the user before the update. so we can access the previous avatar url
+  if (publicId) {
+    // deleting the previous avatar asset from cloudinary
+    await cloudinary.uploader.destroy(publicId);
+  }
+
   res.standardResponse(200, "Avatar updated", { avatar: imageUrl });
 };
 
@@ -113,5 +125,13 @@ export const updateBanner = async (req: Request, res: Response) => {
     throw new CustomError("User not found", 404);
   }
 
+  // extracting the public id of the previous banner asset
+  const publicId =
+    user.banner?.includes("cloudinary") &&
+    `${ENV.CLOUDINARY.FOLDER}/banners/${user.banner.split("/").pop()?.split(".")[0]}`;
+  if (publicId) {
+    // deleting the previous banner asset from cloudinary
+    await cloudinary.uploader.destroy(publicId);
+  }
   res.standardResponse(200, "Banner updated", { banner: imageUrl });
 };

@@ -33,7 +33,7 @@ export const upload: Multer = multer({
 });
 
 export const uploadSingleImage =
-  (width: number, height: number) =>
+  (width: number, height: number, folder: "avatars" | "banners") =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const file: CloudinaryFile | undefined = req.file as
@@ -56,7 +56,7 @@ export const uploadSingleImage =
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: "image",
-          folder: "reddit-clone/avatars",
+          folder: `reddit-clone/${folder}`,
         },
         (error, result) => {
           if (error) {

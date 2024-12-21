@@ -21,13 +21,13 @@ userRouter.put("/about", errorCatch(updateAbout));
 userRouter.put(
   "/avatar",
   upload.single("image"),
-  uploadSingleImage(500, 500),
+  uploadSingleImage(500, 500, "avatars"),
   errorCatch(updateAvatar)
 );
 userRouter.put(
   "/banner",
   upload.single("image"),
-  uploadSingleImage(1500, 500),
+  uploadSingleImage(1500, 500, "banners"),
   errorCatch(updateBanner)
 );
 userRouter.put("/password", errorCatch(changePassword));

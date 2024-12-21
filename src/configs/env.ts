@@ -20,6 +20,7 @@ export const ENV = {
     CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     API_KEY: process.env.CLOUDINARY_API_KEY,
     API_SECRET: process.env.CLOUDINARY_API_SECRET,
+    FOLDER: process.env.CLOUDINARY_FOLDER,
   },
   MAIL: {
     USER: process.env.MAIL_USER,
@@ -35,6 +36,7 @@ const otherVariables = [
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
   "CLOUDINARY_API_SECRET",
+  "CLOUDINARY_FOLDER",
   "CLIENT_URL",
   "MAIL_USER",
   "MAIL_PASS",
