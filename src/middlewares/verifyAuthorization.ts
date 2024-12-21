@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { CustomError } from "../lib/customErrors";
 import { createAccessToken } from "../lib/jwt";
+import { ENV } from "../configs/env";
 
 export const verifyAuthorization = (
   req: Request,
@@ -14,14 +15,8 @@ export const verifyAuthorization = (
     if (!token)
       throw new CustomError("Unauthorized", 401, { code: "NO_TOKEN" });
 
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new CustomError("Internal server error", 500);
-    }
-
     // verify access token
-    jwt.verify(token, secret, (error, decoded) => {
+    jwt.verify(token, ENV.JWT_SECRET, (error, decoded) => {
       // if token is valid, set the user id in the request object and move to the next middleware
       if (decoded) {
         const { userId } = decoded as { userId: string };
@@ -39,16 +34,16 @@ export const verifyAuthorization = (
           });
         }
 
-        jwt.verify(refreshToken, secret, (error, decodedRT) => {
+        jwt.verify(refreshToken, ENV.JWT_SECRET, (error, decodedRT) => {
           // issue new access token
           if (decodedRT) {
             const { userId } = decodedRT as { userId: string };
-            const newToken = createAccessToken(userId, secret);
+            const newToken = createAccessToken(userId, ENV.JWT_SECRET);
 
             // set the new token in the cookie
             res.cookie("token", newToken, {
               httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
+              secure: ENV.NODE_ENV === "production",
               sameSite: "none",
             });
 

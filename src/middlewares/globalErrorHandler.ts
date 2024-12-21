@@ -3,6 +3,7 @@ import { CustomError } from "../lib/customErrors";
 import { CustomResponse } from "../lib/types";
 import { handleZodErrors } from "../lib/handleErrors";
 import { ZodError } from "zod";
+import { ENV } from "../configs/env";
 
 const globalErrorHandler = (
   err: Error,
@@ -10,7 +11,7 @@ const globalErrorHandler = (
   res: CustomResponse,
   _next: NextFunction
 ) => {
-  if (process.env.NODE_ENV === "development") console.error(err); // logs the error to the console if the environment is development
+  if (ENV.NODE_ENV === "development") console.error(err); // logs the error to the console if the environment is development
 
   if (err instanceof CustomError) {
     // handle custom errors we throw from controllers

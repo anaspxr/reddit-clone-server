@@ -1,18 +1,17 @@
 import { v2 as cloudinary } from "cloudinary";
 import multer, { Multer } from "multer";
-import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import sharp from "sharp";
 import { CustomError } from "../lib/customErrors";
+import { ENV } from "../configs/env";
 
 const imageTypes = ["image/jpeg", "image/png", "image/jpg"];
-
-dotenv.config();
+const videoTypes = ["video/mp4", "video/mkv", "video/avi"];
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: ENV.CLOUDINARY.CLOUD_NAME,
+  api_key: ENV.CLOUDINARY.API_KEY,
+  api_secret: ENV.CLOUDINARY.API_SECRET,
 });
 
 interface CloudinaryFile extends Express.Multer.File {
@@ -63,6 +62,7 @@ export const uploadSingleImage =
           if (error) {
             return next(error);
           }
+
           if (!result) {
             return next(new CustomError("Upload failed", 500));
           }
@@ -78,25 +78,31 @@ export const uploadSingleImage =
     }
   };
 
-export const uploadToCloudinary = async (
+export const uploadMultiple = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const cloudinaryUrls: string[] = [];
+  const public_ids: string[] = []; // used to delete all the assets if one of the files fails to upload
+
   try {
     const files: CloudinaryFile[] | undefined = req.files as
       | CloudinaryFile[]
       | undefined;
+
     if (!files || files.length === 0) {
       next();
       return;
     }
 
-    const cloudinaryUrls: string[] = [];
     for (const file of files) {
-      const resizedBuffer = await sharp(file.buffer)
-        .resize(500, 500)
-        .toBuffer();
+      if (
+        !imageTypes.includes(file.mimetype) &&
+        !videoTypes.includes(file.mimetype)
+      ) {
+        throw new CustomError(`Invalid file format: ${file.mimetype}`, 400);
+      }
 
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -105,24 +111,32 @@ export const uploadToCloudinary = async (
         },
         (error, result) => {
           if (error) {
-            return next(error);
+            throw new CustomError(error.message, 500);
           }
           if (!result) {
-            return next(new CustomError("Upload failed", 500));
+            throw new CustomError("Upload failed", 500);
           }
 
           cloudinaryUrls.push(result.secure_url);
+          public_ids.push(result.public_id);
 
           if (cloudinaryUrls.length === files.length) {
-            uploadStream.end(resizedBuffer);
+            uploadStream.end(file.buffer);
             req.body.cloudinaryUrls = cloudinaryUrls;
             return next();
           }
         }
       );
-      uploadStream.end(resizedBuffer);
+      uploadStream.end(file.buffer);
     }
   } catch (error) {
-    next(error);
+    if (public_ids.length > 0) {
+      cloudinary.api
+        .delete_resources(public_ids) // clearing the uploaded assets if any errors
+        .then(() => next(error))
+        .catch(() => next(error)); // catching the possible error here or server will probably crash if any error occurred!
+    } else {
+      next(error);
+    }
   }
 };

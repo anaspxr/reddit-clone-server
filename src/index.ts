@@ -1,5 +1,4 @@
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import connectDb from "./configs/connectDb";
 import addStandardResponse from "./middlewares/addStandardResponse";
@@ -10,16 +9,13 @@ import userRouter from "./routes/userRoutes";
 import publicRouter from "./routes/publicRoutes";
 import cookieParser from "cookie-parser";
 import postRouter from "./routes/postRoutes";
-
-dotenv.config();
-
-const port = process.env.PORT || 3000;
+import { ENV } from "./configs/env";
 
 const app = express();
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: ENV.CLIENT_URL,
     credentials: true,
   })
 );
@@ -42,8 +38,8 @@ app.use(globalErrorHandler);
 
 connectDb();
 
-app.listen(port, () => {
+app.listen(ENV.PORT, () => {
   console.log(
-    `Server is running on ${process.env.NODE_ENV === "development" ? "http://localhost:" : "Port "}${port}`
+    `Server is running on ${ENV.NODE_ENV === "development" ? "http://localhost:" : "Port "}${ENV.PORT}`
   );
 });

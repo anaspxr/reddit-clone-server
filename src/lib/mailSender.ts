@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { CustomError } from "./customErrors";
+import { ENV } from "../configs/env";
 
 const mailSender = async (email: string, title: string, body: string) => {
   try {
@@ -10,8 +11,8 @@ const mailSender = async (email: string, title: string, body: string) => {
       port: 587,
       secure: false,
       auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
+        user: ENV.MAIL.USER,
+        pass: ENV.MAIL.PASS,
       },
     });
 
