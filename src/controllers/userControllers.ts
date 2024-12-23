@@ -9,6 +9,7 @@ import { CustomError } from "../lib/customErrors";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 import { ENV } from "../configs/env";
+import { Follows } from "../models/followModel";
 
 export const updateDisplayName = async (req: Request, res: Response) => {
   const { displayName } = displayNameSchema.parse(req.body);
@@ -134,4 +135,50 @@ export const updateBanner = async (req: Request, res: Response) => {
     await cloudinary.uploader.destroy(publicId);
   }
   res.standardResponse(200, "Banner updated", { banner: imageUrl });
+};
+
+export const followUser = async (req: Request, res: Response) => {
+  const { username } = req.params;
+  const user = await User.findOne({ username: username });
+
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+  const isAlreadyFollowing = await Follows.findOne({
+    follower: req.user,
+    following: user._id,
+  });
+  if (isAlreadyFollowing) {
+    throw new CustomError("Already following", 400);
+  }
+
+  await Follows.create({
+    follower: req.user,
+    following: user._id,
+  });
+
+  res.standardResponse(200, "User followed");
+};
+
+export const unFollowUser = async (req: Request, res: Response) => {
+  const { username } = req.params;
+  const user = await User.findOne({ username: username });
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  const isFollowing = await Follows.findOne({
+    follower: req.user,
+    following: user._id,
+  });
+  if (!isFollowing) {
+    throw new CustomError("Not following", 400);
+  }
+
+  await Follows.findOneAndDelete({
+    follower: req.user,
+    following: user._id,
+  });
+
+  res.standardResponse(200, "User unfollowed");
 };

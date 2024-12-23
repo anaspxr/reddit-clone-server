@@ -68,3 +68,24 @@ export const verifyAuthorization = (
     next(error);
   }
 };
+
+// to use in public routes for having the req.user object
+export const decodeTokenWithoutErrors = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token: string = req.cookies.token;
+
+    if (!token) {
+      next();
+      return;
+    }
+    const user = jwt.decode(token) as { userId: string };
+    req.user = user.userId;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

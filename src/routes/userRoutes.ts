@@ -2,7 +2,9 @@ import { Router } from "express";
 import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
   changePassword,
+  followUser,
   hydrateUser,
+  unFollowUser,
   updateAbout,
   updateAvatar,
   updateBanner,
@@ -31,5 +33,7 @@ userRouter.put(
   errorCatch(updateBanner)
 );
 userRouter.put("/password", errorCatch(changePassword));
+userRouter.post("/:username/follow", errorCatch(followUser));
+userRouter.delete("/:username/follow", errorCatch(unFollowUser));
 
 export default userRouter;

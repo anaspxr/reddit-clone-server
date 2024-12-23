@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { upload, uploadToCloudinary } from "../middlewares/uploadFiles";
+import { upload, uploadMultiple } from "../middlewares/uploadFiles";
 import { Request, Response } from "express";
 import errorCatch from "../lib/errorCatch";
 
@@ -8,7 +8,7 @@ const postRouter = Router();
 postRouter.post(
   "/upload",
   upload.array("images", 5),
-  uploadToCloudinary,
+  uploadMultiple,
   errorCatch(async (req: Request, res: Response) => {
     const cloudinaryUrls: string[] = req.body.cloudinaryUrls || [];
     if (cloudinaryUrls.length === 0) {
