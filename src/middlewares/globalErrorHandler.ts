@@ -11,7 +11,7 @@ const globalErrorHandler = (
   res: CustomResponse,
   _next: NextFunction
 ) => {
-  if (ENV.NODE_ENV === "development") console.error(err); // logs the error to the console if the environment is development
+  if (ENV.NODE_ENV === "development") console.error("error", err); // logs the error to the console if the environment is development
 
   if (err instanceof CustomError) {
     // handle custom errors we throw from controllers

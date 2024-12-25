@@ -24,11 +24,6 @@ export const upload: Multer = multer({
   storage: storage,
   limits: {
     fileSize: 1024 * 1024 * 20,
-    files: 5,
-    fieldSize: 20 * 1024 * 1024,
-    fields: 5,
-    headerPairs: 2000,
-    parts: 5,
   },
 });
 
@@ -40,7 +35,7 @@ export const uploadSingleImage =
         | CloudinaryFile
         | undefined;
       if (!file) {
-        next(new CustomError("No image uploaded", 400));
+        next();
         return;
       }
 
@@ -129,6 +124,7 @@ export const uploadMultiple = async (
       );
       uploadStream.end(file.buffer);
     }
+    req.body.cloudinaryUrls = cloudinaryUrls;
   } catch (error) {
     if (public_ids.length > 0) {
       cloudinary.api
