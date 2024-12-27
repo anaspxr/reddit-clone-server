@@ -4,6 +4,7 @@ import { CustomError } from "../lib/customErrors";
 import { Follows } from "../models/followModel";
 import { Community } from "../models/communityModel";
 import { CommunityRelation } from "../models/communityRelationModel";
+import { Post } from "../models/postModel";
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -63,4 +64,50 @@ export const getCommunity = async (req: Request, res: Response) => {
     ...community.toObject(),
     role,
   });
+};
+
+export const getUserPosts = async (req: Request, res: Response) => {
+  const { username } = req.params;
+
+  const user = await User.findOne({ username });
+  if (!user) {
+    res.standardResponse(404, "User not found");
+    return;
+  }
+
+  const posts = await Post.find({ creator: user.id })
+    .sort({ createdAt: -1 })
+    .populate("creator", "username avatar displayName")
+    .populate("community", "name icon");
+  res.standardResponse(200, "Posts retrieved", posts);
+};
+
+export const getPosts = async (req: Request, res: Response) => {
+  const posts = await Post.find()
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .populate("creator", "username avatar displayName")
+    .populate("community", "name icon");
+  res.standardResponse(200, "Posts retrieved", posts);
+};
+
+export const getCommunityPosts = async (req: Request, res: Response) => {
+  const { name } = req.params;
+
+  const community = await Community.findOne({
+    name,
+  });
+
+  if (!community) {
+    res.standardResponse(404, "Community not found");
+    return;
+  }
+
+  const posts = await Post.find({ community: community._id })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .populate("creator", "username avatar displayName")
+    .populate("community", "name icon");
+
+  res.standardResponse(200, "Posts retrieved", posts);
 };
