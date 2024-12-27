@@ -1,16 +1,20 @@
 // relation ship between community and user
 
-import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
 interface ICommunityRelationModel {
-  communityId: string;
-  userId: string;
-  role: "admin" | "moderator" | "member" | "follower" | "banned";
+  community: Schema.Types.ObjectId;
+  user: Schema.Types.ObjectId;
+  role: "admin" | "moderator" | "member" | "follower";
 }
 
 const communityRelationSchema = new Schema<ICommunityRelationModel>({
-  communityId: { type: String, required: true },
-  userId: { type: String, required: true },
+  community: {
+    type: mongoose.Types.ObjectId,
+    ref: "Community",
+    required: true,
+  },
+  user: { type: mongoose.Types.ObjectId, ref: "User", required: true },
   role: { type: String, required: true },
 });
 

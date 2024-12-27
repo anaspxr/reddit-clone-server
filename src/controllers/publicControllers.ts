@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { User } from "../models/userModel";
 import { CustomError } from "../lib/customErrors";
 import { Follows } from "../models/followModel";
+import { Community } from "../models/communityModel";
+import { CommunityRelation } from "../models/communityRelationModel";
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -37,5 +39,28 @@ export const getUserProfile = async (req: Request, res: Response) => {
     followers,
     following,
     userIsFollowing,
+  });
+};
+
+export const getCommunity = async (req: Request, res: Response) => {
+  const { name } = req.params;
+
+  const community = await Community.findOne({ name });
+
+  if (!community) {
+    res.standardResponse(404, "Community not found!");
+    return;
+  }
+
+  const role = (
+    await CommunityRelation.findOne({
+      community: community?._id,
+      user: req.user,
+    })
+  )?.role;
+
+  res.standardResponse(200, "Community found", {
+    ...community.toObject(),
+    role,
   });
 };

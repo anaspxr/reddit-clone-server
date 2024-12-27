@@ -16,8 +16,8 @@ export const createCommunity = async (req: Request, res: Response) => {
   });
 
   await CommunityRelation.create({
-    communityId: community._id,
-    userId: req.user,
+    community: community._id,
+    user: req.user,
     role: "admin",
   });
 
@@ -40,4 +40,14 @@ export const checkCommunityName = async (req: Request, res: Response) => {
   } else {
     res.standardResponse(200, "Community name available!", "AVAILABLE");
   }
+};
+
+export const getJoinedCommunities = async (req: Request, res: Response) => {
+  const communities = await CommunityRelation.find({
+    user: req.user,
+  }).populate("community", "name icon");
+
+  const data = communities.map((community) => community.community);
+
+  res.standardResponse(200, "User's communities", data);
 };
