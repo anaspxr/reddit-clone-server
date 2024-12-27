@@ -9,6 +9,7 @@ export interface IUser {
   banner?: string;
   about?: string;
   isBanned: boolean;
+  drafts: Schema.Types.ObjectId[];
 }
 
 const userSchema = new Schema<IUser>(
@@ -27,6 +28,7 @@ const userSchema = new Schema<IUser>(
     isBanned: { type: Boolean, default: false },
     avatar: String,
     banner: String,
+    drafts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
   },
   {
     timestamps: true,

@@ -1,23 +1,15 @@
 import { Router } from "express";
-import { upload, uploadMultiple } from "../middlewares/uploadFiles";
-import { Request, Response } from "express";
 import errorCatch from "../lib/errorCatch";
+import {
+  createMediaPost,
+  createTextPost,
+  saveDraftTextPost,
+} from "../controllers/postController";
 
 const postRouter = Router();
 
-postRouter.post(
-  "/upload",
-  upload.array("images", 5),
-  uploadMultiple,
-  errorCatch(async (req: Request, res: Response) => {
-    const cloudinaryUrls: string[] = req.body.cloudinaryUrls || [];
-    if (cloudinaryUrls.length === 0) {
-      console.error("No Cloudinary URLs found.");
-      throw new Error("No Cloudinary URLs found.");
-    }
-    const images = cloudinaryUrls;
-    res.send(images);
-  })
-);
+postRouter.post("/text", errorCatch(createTextPost));
+postRouter.post("/draft/text", errorCatch(saveDraftTextPost));
+postRouter.post("/media", errorCatch(createMediaPost));
 
 export default postRouter;
