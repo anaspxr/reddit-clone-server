@@ -33,12 +33,15 @@ export const saveDraftTextPost = async (req: Request, res: Response) => {
 };
 
 export const createMediaPost = async (req: Request, res: Response) => {
-  const { title, media, community } = mediaPostValidation.parse(req.body);
+  const { title, images, video, community } = mediaPostValidation.parse(
+    req.body
+  );
 
   const newPost = await Post.create({
     title,
     type: "media",
-    media,
+    images,
+    video,
     community,
     creator: req.user,
   });

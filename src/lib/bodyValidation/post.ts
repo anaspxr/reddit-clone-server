@@ -9,5 +9,6 @@ export const textPostValidation = z.object({
 export const mediaPostValidation = z.object({
   title: z.string().min(1).max(300),
   community: z.string().nullable().optional(),
-  media: z.array(z.string()).min(1).max(5),
+  images: z.array(z.string()).max(5).optional(),
+  video: z.string().optional(),
 });

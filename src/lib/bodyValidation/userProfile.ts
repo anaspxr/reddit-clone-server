@@ -1,13 +1,7 @@
 import z from "zod";
 
 export const displayNameSchema = z.object({
-  displayName: z
-    .string()
-    .regex(
-      /^[a-zA-Z0-9]+$/,
-      "Display name should only contain alphanumeric characters"
-    )
-    .min(3),
+  displayName: z.string().min(3),
 });
 
 export const aboutSchema = z.object({

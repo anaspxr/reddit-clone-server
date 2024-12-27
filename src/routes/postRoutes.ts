@@ -5,8 +5,11 @@ import {
   createTextPost,
   saveDraftTextPost,
 } from "../controllers/postController";
+import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 
 const postRouter = Router();
+
+postRouter.use(verifyAuthorization);
 
 postRouter.post("/text", errorCatch(createTextPost));
 postRouter.post("/draft/text", errorCatch(saveDraftTextPost));
