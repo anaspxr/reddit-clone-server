@@ -4,6 +4,9 @@ import {
   checkCommunityName,
   createCommunity,
   getJoinedCommunities,
+  joinCommunity,
+  kickMember,
+  leaveCommunity,
 } from "../controllers/communityControllers";
 import errorCatch from "../lib/errorCatch";
 import { upload, uploadMultiple } from "../middlewares/uploadFiles";
@@ -20,5 +23,8 @@ communityRoutes.post(
 );
 communityRoutes.get("/check", errorCatch(checkCommunityName));
 communityRoutes.get("/joined", errorCatch(getJoinedCommunities));
+communityRoutes.post("/join", errorCatch(joinCommunity));
+communityRoutes.post("/leave", errorCatch(leaveCommunity));
+communityRoutes.post("/kick", errorCatch(kickMember));
 
 export default communityRoutes;
