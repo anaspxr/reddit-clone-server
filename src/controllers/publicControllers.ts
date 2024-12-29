@@ -133,3 +133,35 @@ export const search = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Search results", { users, communities });
 };
+
+export const getFeed = async (req: Request, res: Response) => {
+  const { type } = req.query;
+
+  const user = req.user;
+
+  let feed = [];
+
+  if (type === "popular") {
+    feed = await Post.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("creator", "username avatar displayName")
+      .populate("community", "name icon");
+  } else if (user) {
+    const userCommunities = (await CommunityRelation.find({ user })).map(
+      ({ community }) => community
+    );
+    feed = await Post.find({ community: { $in: userCommunities } })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("creator", "username avatar displayName")
+      .populate("community", "name icon");
+  } else {
+    feed = await Post.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("creator", "username avatar displayName")
+      .populate("community", "name icon");
+  }
+  res.standardResponse(200, "Feed fetched", feed);
+};

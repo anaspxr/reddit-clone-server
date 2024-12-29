@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getCommunity,
   getCommunityPosts,
+  getFeed,
   getUserPosts,
   getUserProfile,
   search,
@@ -18,5 +19,6 @@ publicRouter.get("/user/:username/posts", errorCatch(getUserPosts));
 publicRouter.get("/community/:name", errorCatch(getCommunity));
 publicRouter.get("/community/:name/posts", errorCatch(getCommunityPosts));
 publicRouter.get("/search", errorCatch(search));
+publicRouter.get("/feed", errorCatch(getFeed));
 
 export default publicRouter;
