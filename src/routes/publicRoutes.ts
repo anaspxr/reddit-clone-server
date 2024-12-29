@@ -4,6 +4,7 @@ import {
   getCommunityPosts,
   getUserPosts,
   getUserProfile,
+  search,
 } from "../controllers/publicControllers";
 import errorCatch from "../lib/errorCatch";
 import { decodeTokenWithoutErrors } from "../middlewares/verifyAuthorization";
@@ -16,5 +17,6 @@ publicRouter.get("/user/:username", errorCatch(getUserProfile));
 publicRouter.get("/user/:username/posts", errorCatch(getUserPosts));
 publicRouter.get("/community/:name", errorCatch(getCommunity));
 publicRouter.get("/community/:name/posts", errorCatch(getCommunityPosts));
+publicRouter.get("/search", errorCatch(search));
 
 export default publicRouter;

@@ -111,3 +111,25 @@ export const getCommunityPosts = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Posts retrieved", posts);
 };
+
+export const search = async (req: Request, res: Response) => {
+  const { query = "" } = req.query;
+
+  const users = await User.find({
+    $or: [
+      { username: { $regex: query, $options: "i" } },
+      { displayName: { $regex: query, $options: "i" } },
+    ],
+  })
+    .limit(2)
+    .select("username avatar displayName");
+
+  const communities = await Community.find({
+    name: { $regex: query, $options: "i" },
+    displayName: { $regex: query, $options: "i" },
+  })
+    .limit(4)
+    .select("name icon displayName");
+
+  res.standardResponse(200, "Search results", { users, communities });
+};
