@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
+    "start": "node build/index.js",
     "lint": "eslint",
     "dev": "nodemon --exec ts-node src/index.ts"
   },
