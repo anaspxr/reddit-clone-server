@@ -3,6 +3,7 @@ import {
   getCommunity,
   getCommunityPosts,
   getFeed,
+  getPost,
   getUserPosts,
   getUserProfile,
   search,
@@ -20,5 +21,6 @@ publicRouter.get("/community/:name", errorCatch(getCommunity));
 publicRouter.get("/community/:name/posts", errorCatch(getCommunityPosts));
 publicRouter.get("/search", errorCatch(search));
 publicRouter.get("/feed", errorCatch(getFeed));
+publicRouter.get("/post/:postId", errorCatch(getPost));
 
 export default publicRouter;
