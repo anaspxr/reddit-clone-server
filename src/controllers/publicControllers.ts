@@ -5,6 +5,9 @@ import { Follows } from "../models/followModel";
 import { Community } from "../models/communityModel";
 import { CommunityRelation } from "../models/communityRelationModel";
 import { Post } from "../models/postModel";
+import { getPostsWithVotes } from "../lib/utils/getPostsWithVotes";
+import { Reaction } from "../models/reactionModel";
+import { Comment } from "../models/commentModel";
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -75,10 +78,16 @@ export const getUserPosts = async (req: Request, res: Response) => {
     return;
   }
 
-  const posts = await Post.find({ creator: user.id })
-    .sort({ createdAt: -1 })
-    .populate("creator", "username avatar displayName")
-    .populate("community", "name icon");
+  const posts = await getPostsWithVotes(
+    [
+      {
+        $match: { creator: user._id },
+      },
+      { $sort: { createdAt: -1 } },
+    ],
+    req.user
+  );
+
   res.standardResponse(200, "Posts retrieved", posts);
 };
 
@@ -103,11 +112,15 @@ export const getCommunityPosts = async (req: Request, res: Response) => {
     return;
   }
 
-  const posts = await Post.find({ community: community._id })
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .populate("creator", "username avatar displayName")
-    .populate("community", "name icon");
+  const posts = await getPostsWithVotes(
+    [
+      {
+        $match: { community: community._id },
+      },
+      { $sort: { createdAt: -1 } },
+    ],
+    req.user
+  );
 
   res.standardResponse(200, "Posts retrieved", posts);
 };
@@ -142,26 +155,69 @@ export const getFeed = async (req: Request, res: Response) => {
   let feed = [];
 
   if (type === "popular") {
-    feed = await Post.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .populate("creator", "username avatar displayName")
-      .populate("community", "name icon");
+    feed = await getPostsWithVotes(
+      [{ $sort: { createdAt: -1 } }, { $limit: 10 }],
+      req.user
+    );
   } else if (user) {
     const userCommunities = (await CommunityRelation.find({ user })).map(
       ({ community }) => community
     );
-    feed = await Post.find({ community: { $in: userCommunities } })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .populate("creator", "username avatar displayName")
-      .populate("community", "name icon");
+    feed = await getPostsWithVotes(
+      [
+        {
+          $match: { community: { $in: userCommunities } },
+        },
+        { $sort: { createdAt: -1 } },
+        { $limit: 10 },
+      ],
+      req.user
+    );
   } else {
-    feed = await Post.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .populate("creator", "username avatar displayName")
-      .populate("community", "name icon");
+    feed = await getPostsWithVotes(
+      [{ $sort: { createdAt: -1 } }, { $limit: 10 }],
+      req.user
+    );
   }
   res.standardResponse(200, "Feed fetched", feed);
+};
+
+export const getPost = async (req: Request, res: Response) => {
+  const { postId } = req.params;
+
+  const post = await Post.findById(postId)
+    .populate("creator", "username avatar displayName")
+    .populate("community", "name icon");
+
+  if (!post) {
+    res.standardResponse(404, "Post not found");
+    return;
+  }
+
+  const userReaction = (
+    await Reaction.findOne({
+      post: postId,
+      user: req.user,
+    })
+  )?.reaction;
+
+  const commentCount = await Comment.countDocuments({ post: postId });
+
+  const upvotes = await Reaction.countDocuments({
+    post: postId,
+    reaction: "upvote",
+  });
+
+  const downvotes = await Reaction.countDocuments({
+    post: postId,
+    reaction: "downvote",
+  });
+
+  res.standardResponse(200, "Post found", {
+    ...post.toObject(),
+    userReaction,
+    upvotes,
+    downvotes,
+    commentCount,
+  });
 };

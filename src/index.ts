@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import postRouter from "./routes/postRoutes";
 import { ENV } from "./configs/env";
 import communityRoutes from "./routes/communityRoutes";
+import commentRouter from "./routes/commentRoutes";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/public", publicRouter); // handle public routes that does not requ
 app.use("/api/user", userRouter);
 app.use("/api/post", postRouter);
 app.use("/api/community", communityRoutes);
+app.use("/api/comment", commentRouter);
 
 app.use("*", (req, res, next) => {
   next(new CustomError(`Cannot ${req.method} ${req.originalUrl}`, 404));

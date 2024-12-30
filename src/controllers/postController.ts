@@ -1,11 +1,13 @@
 import {
   mediaPostValidation,
+  postReactSchema,
   textPostValidation,
 } from "../lib/bodyValidation/post";
 import { Community } from "../models/communityModel";
 import { CommunityRelation } from "../models/communityRelationModel";
 import { Draft, Post } from "../models/postModel";
 import { Request, Response } from "express";
+import { Reaction } from "../models/reactionModel";
 
 export const createTextPost = async (req: Request, res: Response) => {
   const { title, body, community } = textPostValidation.parse(req.body);
@@ -86,4 +88,35 @@ export const deletePost = async (req: Request, res: Response) => {
     res.standardResponse(401, "Unauthorized");
     return;
   }
+};
+
+export const reactToPost = async (req: Request, res: Response) => {
+  const { postId, reaction } = postReactSchema.parse(req.body);
+
+  const reactionExists = await Reaction.findOne({
+    post: postId,
+    user: req.user,
+    ref: "Post",
+  });
+
+  if (reactionExists) {
+    if (reactionExists.reaction === reaction) await reactionExists.deleteOne();
+    else
+      await reactionExists.updateOne({
+        reaction,
+      });
+  } else {
+    await Reaction.create({
+      post: postId,
+      ref: "Post",
+      reaction,
+      user: req.user,
+    });
+  }
+
+  const votes =
+    (await Reaction.countDocuments({ post: postId, reaction: "upvote" })) -
+    (await Reaction.countDocuments({ post: postId, reaction: "downvote" }));
+
+  res.standardResponse(200, "Reaction added", { votes });
 };

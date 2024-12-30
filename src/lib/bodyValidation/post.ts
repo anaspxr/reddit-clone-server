@@ -12,3 +12,14 @@ export const mediaPostValidation = z.object({
   images: z.array(z.string()).max(5).optional(),
   video: z.string().optional(),
 });
+
+export const postReactSchema = z.object({
+  postId: z.string(),
+  reaction: z.enum(["upvote", "downvote"]),
+});
+
+export const createCommentSchema = z.object({
+  postId: z.string(),
+  body: z.string().max(5000),
+  parentComment: z.string().nullable().optional(),
+});
