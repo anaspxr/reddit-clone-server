@@ -5,8 +5,6 @@ import {
 } from "../lib/bodyValidation/post";
 import { Comment } from "../models/commentModel";
 import { Reaction } from "../models/reactionModel";
-import { getCommentsWithVotes } from "../lib/utils/getCommentsWithVotes";
-import mongoose from "mongoose";
 
 export const createComment = async (req: Request, res: Response) => {
   const { body, postId, parentComment } = createCommentSchema.parse(req.body);
@@ -25,19 +23,6 @@ export const createComment = async (req: Request, res: Response) => {
     upvotes: 0,
     downvotes: 0,
   });
-};
-
-export const getCommentsOfPost = async (req: Request, res: Response) => {
-  const { postId } = req.params;
-
-  const comments = await getCommentsWithVotes(
-    [
-      { $match: { post: new mongoose.Types.ObjectId(postId) } },
-      { $sort: { createdAt: -1 } },
-    ],
-    req.user
-  );
-  res.standardResponse(200, "Comments fetched", comments);
 };
 
 export const reactToComment = async (req: Request, res: Response) => {

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getCommentsOfPost,
   getCommunity,
   getCommunityPosts,
   getFeed,
@@ -22,5 +23,6 @@ publicRouter.get("/community/:name/posts", errorCatch(getCommunityPosts));
 publicRouter.get("/search", errorCatch(search));
 publicRouter.get("/feed", errorCatch(getFeed));
 publicRouter.get("/post/:postId", errorCatch(getPost));
+publicRouter.get("/comment/:postId", errorCatch(getCommentsOfPost));
 
 export default publicRouter;

@@ -8,6 +8,8 @@ import { Post } from "../models/postModel";
 import { getPostsWithVotes } from "../lib/utils/getPostsWithVotes";
 import { Reaction } from "../models/reactionModel";
 import { Comment } from "../models/commentModel";
+import { getCommentsWithVotes } from "../lib/utils/getCommentsWithVotes";
+import mongoose from "mongoose";
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -220,4 +222,17 @@ export const getPost = async (req: Request, res: Response) => {
     downvotes,
     commentCount,
   });
+};
+
+export const getCommentsOfPost = async (req: Request, res: Response) => {
+  const { postId } = req.params;
+
+  const comments = await getCommentsWithVotes(
+    [
+      { $match: { post: new mongoose.Types.ObjectId(postId) } },
+      { $sort: { createdAt: -1 } },
+    ],
+    req.user
+  );
+  res.standardResponse(200, "Comments fetched", comments);
 };
