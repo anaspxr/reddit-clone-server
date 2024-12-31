@@ -157,10 +157,10 @@ export const getFeed = async (req: Request, res: Response) => {
   let feed = [];
 
   if (type === "popular") {
-    feed = await getPostsWithVotes(
-      [{ $sort: { createdAt: -1 } }, { $limit: 10 }],
-      req.user
-    );
+    feed = await getPostsWithVotes([], req.user, [
+      { $sort: { upvotes: -1 } },
+      { $limit: 10 },
+    ]);
   } else if (user) {
     const userCommunities = (await CommunityRelation.find({ user })).map(
       ({ community }) => community
@@ -235,4 +235,51 @@ export const getCommentsOfPost = async (req: Request, res: Response) => {
     req.user
   );
   res.standardResponse(200, "Comments fetched", comments);
+};
+
+export const getCommunities = async (req: Request, res: Response) => {
+  const userObjectId = req.user ? new mongoose.Types.ObjectId(req.user) : null;
+
+  const communities = await Community.aggregate([
+    {
+      $lookup: {
+        from: "communityrelations",
+        localField: "_id",
+        foreignField: "community",
+        as: "communityRelations",
+      },
+    },
+    {
+      $addFields: {
+        userRelation: userObjectId
+          ? {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: "$communityRelations",
+                    as: "relation",
+                    cond: { $eq: ["$$relation.user", userObjectId] },
+                  },
+                },
+                0,
+              ],
+            }
+          : null,
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        displayName: 1,
+        icon: 1,
+        description: 1,
+        memberCount: {
+          $size: "$communityRelations",
+        },
+        role: "$userRelation.role",
+      },
+    },
+  ]);
+
+  res.standardResponse(200, "Communities retrieved", communities);
 };

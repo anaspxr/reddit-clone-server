@@ -3,7 +3,8 @@ import { Post } from "../../models/postModel";
 
 export const getPostsWithVotes = async (
   initialStages: PipelineStage[] = [],
-  user?: string
+  user?: string,
+  finalStages: PipelineStage[] = []
 ) => {
   const userObjectId = user ? new mongoose.Types.ObjectId(user) : null;
   const posts = await Post.aggregate([
@@ -116,6 +117,7 @@ export const getPostsWithVotes = async (
         updatedAt: 1,
       },
     },
+    ...finalStages,
   ]);
   return posts;
 };
