@@ -6,6 +6,7 @@ import {
   getCommunityPosts,
   getFeed,
   getPost,
+  getUserComments,
   getUserPosts,
   getUserProfile,
   search,
@@ -19,6 +20,7 @@ publicRouter.use(decodeTokenWithoutErrors); // decode token without throwing err
 
 publicRouter.get("/user/:username", errorCatch(getUserProfile));
 publicRouter.get("/user/:username/posts", errorCatch(getUserPosts));
+publicRouter.get("/user/:username/comments", errorCatch(getUserComments));
 publicRouter.get("/community/:name", errorCatch(getCommunity));
 publicRouter.get("/community/:name/posts", errorCatch(getCommunityPosts));
 publicRouter.get("/search", errorCatch(search));

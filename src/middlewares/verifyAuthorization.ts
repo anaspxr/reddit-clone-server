@@ -43,7 +43,7 @@ export const verifyAuthorization = (
             // set the new token in the cookie
             res.cookie("token", newToken, {
               httpOnly: true,
-              secure: ENV.NODE_ENV === "production",
+              secure: true,
               sameSite: "none",
             });
 

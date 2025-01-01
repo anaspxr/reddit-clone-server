@@ -283,3 +283,26 @@ export const getCommunities = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Communities retrieved", communities);
 };
+
+export const getUserComments = async (req: Request, res: Response) => {
+  const { username } = req.params;
+
+  const user = await User.findOne({ username });
+
+  if (!user) {
+    res.standardResponse(404, "User not found");
+    return;
+  }
+
+  const comments = await getCommentsWithVotes(
+    [
+      {
+        $match: { creator: user._id },
+      },
+      { $sort: { createdAt: -1 } },
+    ],
+    req.user
+  );
+
+  res.standardResponse(200, "Comments retrieved", comments);
+};

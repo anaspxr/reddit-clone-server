@@ -8,6 +8,7 @@ import { CommunityRelation } from "../models/communityRelationModel";
 import { Draft, Post } from "../models/postModel";
 import { Request, Response } from "express";
 import { Reaction } from "../models/reactionModel";
+import { CustomError } from "../lib/customErrors";
 
 export const createTextPost = async (req: Request, res: Response) => {
   const { title, body, community } = textPostValidation.parse(req.body);
@@ -60,11 +61,12 @@ export const createMediaPost = async (req: Request, res: Response) => {
 export const deletePost = async (req: Request, res: Response) => {
   const { postId } = req.params;
 
+  console.log(postId);
+
   const post = await Post.findById(postId);
 
   if (!post) {
-    res.standardResponse(404, "Post not found!");
-    return;
+    throw new CustomError("Post not found", 404);
   }
 
   let hasAccess = false;
@@ -85,9 +87,12 @@ export const deletePost = async (req: Request, res: Response) => {
   }
 
   if (!hasAccess) {
-    res.standardResponse(401, "Unauthorized");
-    return;
+    throw new CustomError("You don't have permission to delete this post", 403);
   }
+
+  await post.deleteOne();
+
+  res.standardResponse(200, "Post deleted");
 };
 
 export const reactToPost = async (req: Request, res: Response) => {
