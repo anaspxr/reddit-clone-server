@@ -61,8 +61,6 @@ export const createMediaPost = async (req: Request, res: Response) => {
 export const deletePost = async (req: Request, res: Response) => {
   const { postId } = req.params;
 
-  console.log(postId);
-
   const post = await Post.findById(postId);
 
   if (!post) {

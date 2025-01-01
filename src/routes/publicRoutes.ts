@@ -6,6 +6,7 @@ import {
   getCommunityPosts,
   getFeed,
   getPost,
+  getSearchResults,
   getUserComments,
   getUserPosts,
   getUserProfile,
@@ -18,15 +19,17 @@ const publicRouter = Router();
 
 publicRouter.use(decodeTokenWithoutErrors); // decode token without throwing errors for getting the req.user object
 
-publicRouter.get("/user/:username", errorCatch(getUserProfile));
-publicRouter.get("/user/:username/posts", errorCatch(getUserPosts));
-publicRouter.get("/user/:username/comments", errorCatch(getUserComments));
-publicRouter.get("/community/:name", errorCatch(getCommunity));
-publicRouter.get("/community/:name/posts", errorCatch(getCommunityPosts));
-publicRouter.get("/search", errorCatch(search));
-publicRouter.get("/feed", errorCatch(getFeed));
-publicRouter.get("/post/:postId", errorCatch(getPost));
-publicRouter.get("/comment/:postId", errorCatch(getCommentsOfPost));
-publicRouter.get("/communities", errorCatch(getCommunities));
+publicRouter
+  .get("/user/:username", errorCatch(getUserProfile))
+  .get("/user/:username/posts", errorCatch(getUserPosts))
+  .get("/user/:username/comments", errorCatch(getUserComments))
+  .get("/community/:name", errorCatch(getCommunity))
+  .get("/community/:name/posts", errorCatch(getCommunityPosts))
+  .get("/search", errorCatch(search))
+  .get("/search/results", errorCatch(getSearchResults))
+  .get("/feed", errorCatch(getFeed))
+  .get("/post/:postId", errorCatch(getPost))
+  .get("/comment/:postId", errorCatch(getCommentsOfPost))
+  .get("/communities", errorCatch(getCommunities));
 
 export default publicRouter;

@@ -306,3 +306,103 @@ export const getUserComments = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Comments retrieved", comments);
 };
+
+export const getSearchResults = async (req: Request, res: Response) => {
+  const { query = "", type } = req.query;
+  const userObjectId = req.user ? new mongoose.Types.ObjectId(req.user) : null;
+
+  let result = [];
+
+  switch (type) {
+    case "post": {
+      result = await getPostsWithVotes(
+        [
+          {
+            $match: {
+              $or: [
+                { title: { $regex: query, $options: "i" } },
+                { body: { $regex: query, $options: "i" } },
+              ],
+            },
+          },
+        ],
+        req.user
+      );
+      break;
+    }
+
+    case "community": {
+      result = await Community.aggregate([
+        {
+          $match: {
+            $or: [
+              { name: { $regex: query, $options: "i" } },
+              { displayName: { $regex: query, $options: "i" } },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "communityrelations",
+            localField: "_id",
+            foreignField: "community",
+            as: "communityRelations",
+          },
+        },
+        {
+          $addFields: {
+            userRelation: userObjectId
+              ? {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$communityRelations",
+                        as: "relation",
+                        cond: { $eq: ["$$relation.user", userObjectId] },
+                      },
+                    },
+                    0,
+                  ],
+                }
+              : null,
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            displayName: 1,
+            icon: 1,
+            description: 1,
+            memberCount: {
+              $size: "$communityRelations",
+            },
+            role: "$userRelation.role",
+          },
+        },
+      ]);
+
+      break;
+    }
+
+    case "user": {
+      result = await User.find({
+        $or: [
+          { username: { $regex: query, $options: "i" } },
+          { displayName: { $regex: query, $options: "i" } },
+        ],
+      })
+        .limit(2)
+        .select("username avatar displayName");
+      break;
+    }
+
+    default: {
+      throw new CustomError(
+        "Invalid type. expected post, community or user",
+        400
+      );
+    }
+  }
+
+  res.standardResponse(200, "Search results", result);
+};
