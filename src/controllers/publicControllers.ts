@@ -406,3 +406,18 @@ export const getSearchResults = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Search results", result);
 };
+
+export const searchUsers = async (req: Request, res: Response) => {
+  const { query = "" } = req.query;
+
+  const users = await User.find({
+    $or: [
+      { username: { $regex: query, $options: "i" } },
+      { displayName: { $regex: query, $options: "i" } },
+    ],
+  })
+    .limit(5)
+    .select("username avatar displayName");
+
+  res.standardResponse(200, "Search results", users);
+};

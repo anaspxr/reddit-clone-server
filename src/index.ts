@@ -12,8 +12,8 @@ import postRouter from "./routes/postRoutes";
 import { ENV } from "./configs/env";
 import communityRoutes from "./routes/communityRoutes";
 import commentRouter from "./routes/commentRoutes";
-
-const app = express();
+import { app, server } from "./socket";
+import chatRouter from "./routes/chatRoutes";
 
 app.use(
   cors({
@@ -33,6 +33,7 @@ app.use("/api/user", userRouter);
 app.use("/api/post", postRouter);
 app.use("/api/community", communityRoutes);
 app.use("/api/comment", commentRouter);
+app.use("/api/chat", chatRouter);
 
 app.use("*", (req, res, next) => {
   next(new CustomError(`Cannot ${req.method} ${req.originalUrl}`, 404));
@@ -42,7 +43,7 @@ app.use(globalErrorHandler);
 
 connectDb();
 
-app.listen(ENV.PORT, () => {
+server.listen(ENV.PORT, () => {
   console.log(
     `Server is running on ${ENV.NODE_ENV === "development" ? "http://localhost:" : "Port "}${ENV.PORT}`
   );

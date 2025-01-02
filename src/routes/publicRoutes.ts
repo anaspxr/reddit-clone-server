@@ -11,6 +11,7 @@ import {
   getUserPosts,
   getUserProfile,
   search,
+  searchUsers,
 } from "../controllers/publicControllers";
 import errorCatch from "../lib/errorCatch";
 import { decodeTokenWithoutErrors } from "../middlewares/verifyAuthorization";
@@ -27,6 +28,7 @@ publicRouter
   .get("/community/:name/posts", errorCatch(getCommunityPosts))
   .get("/search", errorCatch(search))
   .get("/search/results", errorCatch(getSearchResults))
+  .get("/search/users", errorCatch(searchUsers))
   .get("/feed", errorCatch(getFeed))
   .get("/post/:postId", errorCatch(getPost))
   .get("/comment/:postId", errorCatch(getCommentsOfPost))
