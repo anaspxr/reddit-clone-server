@@ -6,6 +6,7 @@ import {
   getCommunityPosts,
   getFeed,
   getPost,
+  getRepliesOfComment,
   getSearchResults,
   getUserComments,
   getUserPosts,
@@ -32,6 +33,7 @@ publicRouter
   .get("/feed", errorCatch(getFeed))
   .get("/post/:postId", errorCatch(getPost))
   .get("/comment/:postId", errorCatch(getCommentsOfPost))
+  .get("/replies/:commentId", errorCatch(getRepliesOfComment))
   .get("/communities", errorCatch(getCommunities));
 
 export default publicRouter;

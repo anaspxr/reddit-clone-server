@@ -229,12 +229,30 @@ export const getCommentsOfPost = async (req: Request, res: Response) => {
 
   const comments = await getCommentsWithVotes(
     [
-      { $match: { post: new mongoose.Types.ObjectId(postId) } },
+      {
+        $match: {
+          post: new mongoose.Types.ObjectId(postId),
+          parentComment: { $exists: false },
+        },
+      },
       { $sort: { createdAt: -1 } },
     ],
     req.user
   );
   res.standardResponse(200, "Comments fetched", comments);
+};
+
+export const getRepliesOfComment = async (req: Request, res: Response) => {
+  const { commentId } = req.params;
+
+  const comments = await getCommentsWithVotes(
+    [
+      { $match: { parentComment: new mongoose.Types.ObjectId(commentId) } },
+      { $sort: { createdAt: -1 } },
+    ],
+    req.user
+  );
+  res.standardResponse(200, "Replies fetched", comments);
 };
 
 export const getCommunities = async (req: Request, res: Response) => {
