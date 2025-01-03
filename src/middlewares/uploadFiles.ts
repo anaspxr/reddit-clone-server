@@ -55,11 +55,13 @@ export const uploadSingleImage =
         },
         (error, result) => {
           if (error) {
-            return next(error);
+            next(new CustomError("Failed to upload", 500, error));
+            return;
           }
 
           if (!result) {
-            return next(new CustomError("Upload failed", 500));
+            next(new CustomError("Failed to upload", 500, error));
+            return;
           }
 
           uploadStream.end(resizedBuffer);
@@ -69,7 +71,7 @@ export const uploadSingleImage =
       );
       uploadStream.end(resizedBuffer);
     } catch (error) {
-      next(error);
+      res.standardResponse(500, "Failed to upload to cloudinary", error);
     }
   };
 
@@ -106,10 +108,12 @@ export const uploadMultiple = async (
         },
         (error, result) => {
           if (error) {
-            throw new CustomError(error.message, 500);
+            next(new CustomError("Failed to upload", 500, error));
+            return;
           }
           if (!result) {
-            throw new CustomError("Upload failed", 500);
+            next(new CustomError("Failed to upload", 500, error));
+            return;
           }
 
           cloudinaryUrls.push(result.secure_url);
@@ -124,15 +128,7 @@ export const uploadMultiple = async (
       );
       uploadStream.end(file.buffer);
     }
-    req.body.cloudinaryUrls = cloudinaryUrls;
   } catch (error) {
-    if (public_ids.length > 0) {
-      cloudinary.api
-        .delete_resources(public_ids) // clearing the uploaded assets if any errors
-        .then(() => next(error))
-        .catch(() => next(error)); // catching the possible error here or server will probably crash if any error occurred!
-    } else {
-      next(error);
-    }
+    res.standardResponse(500, "Failed to upload to files", error);
   }
 };
