@@ -4,6 +4,7 @@ import express from "express";
 import { ENV } from "./configs/env";
 import devLog from "./lib/devLog";
 import { Message } from "./models/messageModel";
+import jwt from "jsonwebtoken";
 
 interface UserSocketMap {
   [userId: string]: string;
@@ -13,7 +14,7 @@ export const userSocketMap: UserSocketMap = {}; // stores the socket id of each 
 
 export const app = express();
 export const server = createServer(app);
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: ENV.CLIENT_URL,
     methods: ["GET", "POST"],
@@ -21,12 +22,22 @@ const io = new Server(server, {
 });
 
 io.use((socket, next) => {
-  const userId = socket.handshake.auth.userId;
-  devLog("userID", userId);
-  if (!userId) {
-    devLog("no user id");
-    return next(new Error("invalid username"));
+  const pass = socket.handshake.auth.pass;
+  if (!pass) {
+    devLog("no token");
+    return next(new Error("No socket token!"));
   }
+
+  try {
+    const decoded = jwt.verify(pass, ENV.JWT_SOCKET_SECRET);
+    socket.handshake.auth.userId = (decoded as { id: string }).id;
+    socket.data.userId = (decoded as { id: string }).id;
+    devLog("decoded", decoded);
+  } catch (error) {
+    devLog("socket pass decode error", error);
+    return next(new Error("Invalid socket token!"));
+  }
+
   next();
 });
 
@@ -38,9 +49,10 @@ io.on("connection", async (socket) => {
   });
 
   // user join event
-  socket.on("join", (userId: string) => {
-    userSocketMap[userId] = socket.id;
-    devLog("user joined", userId);
+  socket.on("join", () => {
+    devLog("user joined", socket.data.userId);
+    userSocketMap[socket.data.userId] = socket.id;
+    devLog("user joined", socket.data.userId);
     devLog(userSocketMap);
   });
 

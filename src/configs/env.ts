@@ -7,6 +7,10 @@ if (process.env.JWT_SECRET === undefined) {
   throw new Error("env: JWT_SECRET is not defined");
 }
 
+if (process.env.JWT_SOCKET_SECRET === undefined) {
+  throw new Error("env: JWT_SOCKET_SECRET is not defined");
+}
+
 if (process.env.MONGO_URI === undefined) {
   throw new Error("env: MONGO_URI is not defined");
 }
@@ -16,6 +20,7 @@ export const ENV = {
   NODE_ENV: process.env.NODE_ENV,
   MONGO_URI: process.env.MONGO_URI,
   JWT_SECRET: process.env.JWT_SECRET,
+  JWT_SOCKET_SECRET: process.env.JWT_SOCKET_SECRET,
   CLOUDINARY: {
     CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     API_KEY: process.env.CLOUDINARY_API_KEY,

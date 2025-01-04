@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 import { ENV } from "../configs/env";
 import { Follows } from "../models/followModel";
+import jwt from "jsonwebtoken";
 
 export const updateDisplayName = async (req: Request, res: Response) => {
   const { displayName } = displayNameSchema.parse(req.body);
@@ -78,9 +79,14 @@ export const hydrateUser = async (req: Request, res: Response) => {
     throw new CustomError("User not found", 404);
   }
 
-  const { username, email, avatar } = user.toObject();
+  const { _id, username, email, avatar } = user.toObject();
 
-  res.standardResponse(200, "User data fetched", { username, email, avatar });
+  res.standardResponse(200, "User data fetched", {
+    _id,
+    username,
+    email,
+    avatar,
+  });
 };
 
 export const updateAvatar = async (req: Request, res: Response) => {
@@ -181,4 +187,15 @@ export const unFollowUser = async (req: Request, res: Response) => {
   });
 
   res.standardResponse(200, "User unfollowed");
+};
+
+export const getSocketPass = async (req: Request, res: Response) => {
+  const user = await User.findById(req.user);
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  const pass = jwt.sign({ id: user._id }, ENV.JWT_SOCKET_SECRET);
+
+  res.standardResponse(200, "Socket pass generated", { pass });
 };

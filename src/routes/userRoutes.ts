@@ -3,6 +3,7 @@ import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
   changePassword,
   followUser,
+  getSocketPass,
   hydrateUser,
   unFollowUser,
   updateAbout,
@@ -18,6 +19,7 @@ const userRouter = Router();
 userRouter.use(verifyAuthorization);
 
 userRouter.get("/hydrate", errorCatch(hydrateUser)); // get user data for initial hydration
+userRouter.get("/socket-pass", errorCatch(getSocketPass));
 userRouter.put("/displayname", errorCatch(updateDisplayName));
 userRouter.put("/about", errorCatch(updateAbout));
 userRouter.put(
