@@ -11,6 +11,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { ENV } from "../configs/env";
 import { Follows } from "../models/followModel";
 import jwt from "jsonwebtoken";
+import { createFollowNotification } from "./notifcationController";
 
 export const updateDisplayName = async (req: Request, res: Response) => {
   const { displayName } = displayNameSchema.parse(req.body);
@@ -162,6 +163,8 @@ export const followUser = async (req: Request, res: Response) => {
     follower: req.user,
     following: user._id,
   });
+
+  createFollowNotification(user._id.toString(), req.user);
 
   res.standardResponse(200, "User followed");
 };

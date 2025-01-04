@@ -6,6 +6,10 @@ import {
 import { Comment } from "../models/commentModel";
 import { Reaction } from "../models/reactionModel";
 import { CustomError } from "../lib/customErrors";
+import {
+  createCommentNotification,
+  createLikeNotification,
+} from "./notifcationController";
 
 export const createComment = async (req: Request, res: Response) => {
   const { body, postId, parentComment } = createCommentSchema.parse(req.body);
@@ -17,7 +21,12 @@ export const createComment = async (req: Request, res: Response) => {
       post: postId,
       parentComment,
     })
-  ).populate("creator", "username avatar displayName");
+  ).populate<{ creator: { username: string } }>(
+    "creator",
+    "username avatar displayName"
+  );
+
+  createCommentNotification(postId, comment.creator.username, parentComment);
 
   res.standardResponse(201, "Comment created", {
     ...comment.toObject(),
@@ -28,6 +37,12 @@ export const createComment = async (req: Request, res: Response) => {
 
 export const reactToComment = async (req: Request, res: Response) => {
   const { postId, reaction } = postReactSchema.parse(req.body);
+
+  const postExists = await Comment.findById({ _id: postId });
+
+  if (!postExists) {
+    throw new CustomError("Post not found", 404);
+  }
 
   const reactionExists = await Reaction.findOne({
     post: postId,
@@ -53,6 +68,8 @@ export const reactToComment = async (req: Request, res: Response) => {
   const votes =
     (await Reaction.countDocuments({ post: postId, reaction: "upvote" })) -
     (await Reaction.countDocuments({ post: postId, reaction: "downvote" }));
+
+  await createLikeNotification(postExists.creator.toString(), votes, postId);
 
   res.standardResponse(200, "Reaction added", { votes });
 };

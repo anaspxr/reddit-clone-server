@@ -13,29 +13,38 @@ import {
 } from "../controllers/userControllers";
 import errorCatch from "../lib/errorCatch";
 import { upload, uploadSingleImage } from "../middlewares/uploadFiles";
+import {
+  getUsersNotifications,
+  markAllAsRead,
+  markAsRead,
+} from "../controllers/notifcationController";
 
 const userRouter = Router();
 
 userRouter.use(verifyAuthorization);
 
-userRouter.get("/hydrate", errorCatch(hydrateUser)); // get user data for initial hydration
-userRouter.get("/socket-pass", errorCatch(getSocketPass));
-userRouter.put("/displayname", errorCatch(updateDisplayName));
-userRouter.put("/about", errorCatch(updateAbout));
-userRouter.put(
-  "/avatar",
-  upload.single("image"),
-  uploadSingleImage(500, 500, "avatars"),
-  errorCatch(updateAvatar)
-);
-userRouter.put(
-  "/banner",
-  upload.single("image"),
-  uploadSingleImage(1500, 500, "banners"),
-  errorCatch(updateBanner)
-);
-userRouter.put("/password", errorCatch(changePassword));
-userRouter.post("/:username/follow", errorCatch(followUser));
-userRouter.delete("/:username/follow", errorCatch(unFollowUser));
+userRouter
+  .get("/hydrate", errorCatch(hydrateUser)) // get user data for initial hydrationuserRouter
+  .get("/socket-pass", errorCatch(getSocketPass))
+  .put("/displayname", errorCatch(updateDisplayName))
+  .put("/about", errorCatch(updateAbout))
+  .put(
+    "/avatar",
+    upload.single("image"),
+    uploadSingleImage(500, 500, "avatars"),
+    errorCatch(updateAvatar)
+  )
+  .put(
+    "/banner",
+    upload.single("image"),
+    uploadSingleImage(1500, 500, "banners"),
+    errorCatch(updateBanner)
+  )
+  .put("/password", errorCatch(changePassword))
+  .post("/:username/follow", errorCatch(followUser))
+  .delete("/:username/follow", errorCatch(unFollowUser))
+  .get("/notifications", errorCatch(getUsersNotifications))
+  .put("/notifications/:id/read", errorCatch(markAsRead))
+  .put("/notifications/read-all", errorCatch(markAllAsRead));
 
 export default userRouter;

@@ -9,6 +9,7 @@ import { Draft, Post } from "../models/postModel";
 import { Request, Response } from "express";
 import { Reaction } from "../models/reactionModel";
 import { CustomError } from "../lib/customErrors";
+import { createLikeNotification } from "./notifcationController";
 
 export const createTextPost = async (req: Request, res: Response) => {
   const { title, body, community } = textPostValidation.parse(req.body);
@@ -96,6 +97,12 @@ export const deletePost = async (req: Request, res: Response) => {
 export const reactToPost = async (req: Request, res: Response) => {
   const { postId, reaction } = postReactSchema.parse(req.body);
 
+  const postExists = await Post.findById(postId);
+
+  if (!postExists) {
+    throw new CustomError("Post not found", 404);
+  }
+
   const reactionExists = await Reaction.findOne({
     post: postId,
     user: req.user,
@@ -120,6 +127,8 @@ export const reactToPost = async (req: Request, res: Response) => {
   const votes =
     (await Reaction.countDocuments({ post: postId, reaction: "upvote" })) -
     (await Reaction.countDocuments({ post: postId, reaction: "downvote" }));
+
+  await createLikeNotification(postExists.creator.toString(), votes, postId);
 
   res.standardResponse(200, "Reaction added", { votes });
 };
