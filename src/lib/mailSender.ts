@@ -8,6 +8,7 @@ const mailSender = async (email: string, title: string, body: string) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       host: "smtp.gmail.com",
+      from: "reddit-clone.anasp.me",
       port: 587,
       secure: false,
       auth: {
@@ -18,7 +19,7 @@ const mailSender = async (email: string, title: string, body: string) => {
 
     // Send emails to users
     const info = await transporter.sendMail({
-      from: "noreply@reddit.clone",
+      from: "reddit-clone.anasp.me",
       to: email,
       subject: title,
       html: body,
@@ -38,12 +39,38 @@ export const sendRegisterOtpMail = async (email: string, otp: string) => {
     "Verify your email",
     `
     <div style="font-family: Arial, sans-serif; text-align: center;">
-      <h2>Verify your email</h2>
+      <h2>Welcome to my Reddit clone!!</h2>
       <p>Please enter the following OTP to verify your email:</p>
       <h1 style="color: #FF4500;">${otp}</h1>
       <p>expires in 10 minutes</p>
-	  
-      <p>Welcome to Reddit!!!</p>
+    </div>
+    `
+  );
+};
+
+export const sendChangePasswordMail = async (email: string, otp: string) => {
+  await mailSender(
+    email,
+    "Change Password",
+    `
+    <div style="font-family: Arial, sans-serif; text-align: center;">
+      <h2>Reset your password</h2>
+      <p>Please enter the following OTP to reset your password:</p>
+      <h1 style="color: #FF4500;">${otp}</h1>
+      <p>expires in 5 minutes</p>
+    </div>
+    `
+  );
+};
+
+export const sendDeleteAccountMail = async (email: string) => {
+  await mailSender(
+    email,
+    "Account Deleted",
+    `
+    <div style="font-family: Arial, sans-serif; text-align: center;">
+      <h2>Your reddit-clone account has been deleted</h2>
+      <p>Sorry to see you go. If you didn't request this, please contact us immediately.</p>
     </div>
     `
   );

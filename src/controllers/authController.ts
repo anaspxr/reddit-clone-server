@@ -3,6 +3,7 @@ import {
   loginSchema,
   otpSchema,
   registerSchema,
+  resetPasswordSchema,
   verifyOtpSchema,
 } from "../lib/bodyValidation/auth";
 import { IUser, User } from "../models/userModel";
@@ -12,7 +13,7 @@ import { createAccessToken, createRefreshToken } from "../lib/jwt";
 import bcrypt from "bcryptjs";
 import { HydratedDocument } from "mongoose";
 import otpGenerator from "otp-generator";
-import { sendRegisterOtpMail } from "../lib/mailSender";
+import { sendChangePasswordMail, sendRegisterOtpMail } from "../lib/mailSender";
 import { ENV } from "../configs/env";
 
 // send otp to email for registration
@@ -44,7 +45,7 @@ export const sendOtpForRegister = async (req: Request, res: Response) => {
 };
 
 // verify otp that was sent to email
-export const verifyOtpForRegister = async (req: Request, res: Response) => {
+export const verifyOtp = async (req: Request, res: Response) => {
   const { email, otp } = verifyOtpSchema.parse(req.body);
 
   const otpDoc = await Otp.findOne({ email });
@@ -174,4 +175,48 @@ export const userLogout = async (req: Request, res: Response) => {
   res.clearCookie("refreshToken");
 
   res.standardResponse(200, "User logged out");
+};
+
+export const sendResetPasswordOtp = async (req: Request, res: Response) => {
+  const { email } = otpSchema.parse(req.params);
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new CustomError("User not found", 400);
+  }
+
+  const otp = otpGenerator.generate(6, {
+    digits: true,
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 5); // 5 minutes
+
+  await Otp.findOneAndDelete({ email });
+  await Otp.create({ email, otp, expiresAt });
+  await sendChangePasswordMail(email, otp);
+
+  res.standardResponse(200, "OTP sent to email");
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, newPassword } = resetPasswordSchema.parse(req.body);
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new CustomError("User not found", 400);
+  }
+
+  const otpVerified = await Otp.findOne({ email, verified: true });
+  if (!otpVerified) {
+    throw new CustomError("Email not verified", 400);
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await user.updateOne({ password: hashedPassword });
+
+  res.standardResponse(200, "Password reset");
 };
