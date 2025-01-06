@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
+  changeDisplayName,
   checkCommunityName,
   createCommunity,
   getJoinedCommunities,
@@ -15,16 +16,18 @@ const communityRoutes = Router();
 
 communityRoutes.use(verifyAuthorization);
 
-communityRoutes.post(
-  "/",
-  upload.array("images"),
-  uploadMultiple,
-  errorCatch(createCommunity)
-);
-communityRoutes.get("/check", errorCatch(checkCommunityName));
-communityRoutes.get("/joined", errorCatch(getJoinedCommunities));
-communityRoutes.post("/join", errorCatch(joinCommunity));
-communityRoutes.post("/leave", errorCatch(leaveCommunity));
-communityRoutes.post("/kick", errorCatch(kickMember));
+communityRoutes
+  .post(
+    "/",
+    upload.array("images"),
+    uploadMultiple,
+    errorCatch(createCommunity)
+  )
+  .get("/check", errorCatch(checkCommunityName))
+  .get("/joined", errorCatch(getJoinedCommunities))
+  .post("/join", errorCatch(joinCommunity))
+  .post("/leave", errorCatch(leaveCommunity))
+  .post("/kick", errorCatch(kickMember))
+  .post("/:communityName/displayname", errorCatch(changeDisplayName));
 
 export default communityRoutes;

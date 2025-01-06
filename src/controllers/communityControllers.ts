@@ -7,6 +7,8 @@ import { Community } from "../models/communityModel";
 import { CommunityRelation } from "../models/communityRelationModel";
 import { Request, Response } from "express";
 import { User } from "../models/userModel";
+import { displayNameSchema } from "../lib/bodyValidation/userProfile";
+import { hasCommunityAccess } from "../lib/utils/hasCommunityAccess";
 
 export const createCommunity = async (req: Request, res: Response) => {
   const { name, description, type } = createCommunitySchema.parse(req.body);
@@ -107,23 +109,7 @@ export const leaveCommunity = async (req: Request, res: Response) => {
 export const kickMember = async (req: Request, res: Response) => {
   const { name, username } = kickMemberSchema.parse(req.body);
 
-  const community = await Community.findOne({ name });
-  if (!community) {
-    res.standardResponse(404, "Community not found");
-    return;
-  }
-
-  const userRole = (
-    await CommunityRelation.findOne({
-      community: community._id,
-      user: req.user,
-    })
-  )?.role;
-
-  if (userRole !== "admin" && userRole !== "moderator") {
-    res.standardResponse(403, "You are not authorized to kick members");
-    return;
-  }
+  const { community } = await hasCommunityAccess(name, req.user);
 
   const user = await User.findOne({ username });
   if (!user) {
@@ -136,4 +122,18 @@ export const kickMember = async (req: Request, res: Response) => {
     user: user._id,
   });
   res.standardResponse(200, "User kicked from community");
+};
+
+//* community settings
+
+export const changeDisplayName = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+
+  const { community } = await hasCommunityAccess(communityName, req.user);
+
+  const { displayName } = displayNameSchema.parse(req.body);
+
+  await community.updateOne({ displayName });
+
+  res.standardResponse(200, "Display name updated", community);
 };
