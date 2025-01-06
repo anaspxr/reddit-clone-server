@@ -18,6 +18,6 @@ export const communityNameSchema = z.object({
 });
 
 export const kickMemberSchema = z.object({
-  name: z.string().min(1).max(20),
+  communityName: z.string().min(1).max(20),
   username: z.string().min(1).max(20),
 });

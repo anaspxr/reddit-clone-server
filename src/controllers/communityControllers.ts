@@ -107,8 +107,8 @@ export const leaveCommunity = async (req: Request, res: Response) => {
 };
 
 export const kickMember = async (req: Request, res: Response) => {
-  const { name, username } = kickMemberSchema.parse(req.body);
-  const { community } = await hasCommunityAccess(name, req.user);
+  const { communityName, username } = kickMemberSchema.parse(req.params);
+  const { community } = await hasCommunityAccess(communityName, req.user);
 
   const user = await User.findOne({ username });
   if (!user) {
@@ -163,4 +163,18 @@ export const changeBanner = async (req: Request, res: Response) => {
   await community.updateOne({ banner });
 
   res.standardResponse(200, "Banner updated", community);
+};
+
+export const getCommunityMembers = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+
+  const members = await CommunityRelation.find({
+    community: community._id,
+  }).populate("user", "username avatar");
+
+  res.standardResponse(200, "Community members", {
+    ...community.toObject(),
+    members,
+  });
 };

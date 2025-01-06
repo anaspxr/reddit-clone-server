@@ -7,6 +7,7 @@ import {
   changeIcon,
   checkCommunityName,
   createCommunity,
+  getCommunityMembers,
   getJoinedCommunities,
   joinCommunity,
   kickMember,
@@ -34,7 +35,6 @@ communityRoutes
   .get("/joined", errorCatch(getJoinedCommunities))
   .post("/join", errorCatch(joinCommunity))
   .post("/leave", errorCatch(leaveCommunity))
-  .post("/kick", errorCatch(kickMember))
   .put("/:communityName/displayname", errorCatch(changeDisplayName))
   .put("/:communityName/description", errorCatch(changeDescription))
   .put(
@@ -48,6 +48,8 @@ communityRoutes
     upload.single("image"),
     uploadSingleImage(1500, 500, "banners"),
     errorCatch(changeBanner)
-  );
+  )
+  .get("/:communityName/members", errorCatch(getCommunityMembers))
+  .delete("/:communityName/members/:username", errorCatch(kickMember));
 
 export default communityRoutes;
