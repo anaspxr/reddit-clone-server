@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
+  changeBanner,
+  changeDescription,
   changeDisplayName,
+  changeIcon,
   checkCommunityName,
   createCommunity,
   getJoinedCommunities,
@@ -10,7 +13,11 @@ import {
   leaveCommunity,
 } from "../controllers/communityControllers";
 import errorCatch from "../lib/errorCatch";
-import { upload, uploadMultiple } from "../middlewares/uploadFiles";
+import {
+  upload,
+  uploadMultiple,
+  uploadSingleImage,
+} from "../middlewares/uploadFiles";
 
 const communityRoutes = Router();
 
@@ -28,6 +35,19 @@ communityRoutes
   .post("/join", errorCatch(joinCommunity))
   .post("/leave", errorCatch(leaveCommunity))
   .post("/kick", errorCatch(kickMember))
-  .post("/:communityName/displayname", errorCatch(changeDisplayName));
+  .put("/:communityName/displayname", errorCatch(changeDisplayName))
+  .put("/:communityName/description", errorCatch(changeDescription))
+  .put(
+    "/:communityName/icon",
+    upload.single("image"),
+    uploadSingleImage(500, 500, "avatars"),
+    errorCatch(changeIcon)
+  )
+  .put(
+    "/:communityName/banner",
+    upload.single("image"),
+    uploadSingleImage(1500, 500, "banners"),
+    errorCatch(changeBanner)
+  );
 
 export default communityRoutes;

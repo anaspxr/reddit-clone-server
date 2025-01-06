@@ -1,6 +1,5 @@
 import {
   aboutSchema,
-  changePasswordSchema,
   deleteAccountSchema,
   displayNameSchema,
 } from "../lib/bodyValidation/userProfile";
@@ -50,30 +49,6 @@ export const updateAbout = async (req: Request, res: Response) => {
   }
 
   res.standardResponse(200, "About description updated", user);
-};
-
-export const changePassword = async (req: Request, res: Response) => {
-  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
-
-  const user = await User.findById(req.user);
-
-  if (!user) {
-    throw new CustomError("User not found", 404);
-  }
-
-  const isPasswordCorrect = await bcrypt.compare(
-    currentPassword,
-    user.password
-  );
-
-  if (!isPasswordCorrect) {
-    throw new CustomError("Invalid password", 400);
-  }
-
-  user.password = newPassword;
-  await user.save();
-
-  res.standardResponse(200, "Password updated successfully");
 };
 
 export const hydrateUser = async (req: Request, res: Response) => {

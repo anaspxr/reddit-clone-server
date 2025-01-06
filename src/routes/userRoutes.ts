@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
-  changePassword,
   deleteAccount,
   followUser,
   getSocketPass,
@@ -41,7 +40,6 @@ userRouter
     uploadSingleImage(1500, 500, "banners"),
     errorCatch(updateBanner)
   )
-  .put("/password", errorCatch(changePassword))
   .post("/:username/follow", errorCatch(followUser))
   .delete("/:username/follow", errorCatch(unFollowUser))
   .get("/notifications", errorCatch(getUsersNotifications))

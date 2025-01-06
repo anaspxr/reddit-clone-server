@@ -108,7 +108,6 @@ export const leaveCommunity = async (req: Request, res: Response) => {
 
 export const kickMember = async (req: Request, res: Response) => {
   const { name, username } = kickMemberSchema.parse(req.body);
-
   const { community } = await hasCommunityAccess(name, req.user);
 
   const user = await User.findOne({ username });
@@ -128,12 +127,40 @@ export const kickMember = async (req: Request, res: Response) => {
 
 export const changeDisplayName = async (req: Request, res: Response) => {
   const { communityName } = req.params;
-
   const { community } = await hasCommunityAccess(communityName, req.user);
-
   const { displayName } = displayNameSchema.parse(req.body);
 
   await community.updateOne({ displayName });
 
   res.standardResponse(200, "Display name updated", community);
+};
+
+export const changeDescription = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+  const { description } = req.body;
+
+  await community.updateOne({ description });
+
+  res.standardResponse(200, "Description updated", community);
+};
+
+export const changeIcon = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+  const icon = req.body.cloudinaryUrl;
+
+  await community.updateOne({ icon });
+
+  res.standardResponse(200, "Icon updated", community);
+};
+
+export const changeBanner = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+  const banner = req.body.cloudinaryUrl;
+
+  await community.updateOne({ banner });
+
+  res.standardResponse(200, "Banner updated", community);
 };
