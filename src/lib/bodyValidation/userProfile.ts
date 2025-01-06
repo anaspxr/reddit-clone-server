@@ -14,3 +14,8 @@ export const changePasswordSchema = z.object({
     .string()
     .min(8, "Password should be at least 8 characters long"),
 });
+
+export const deleteAccountSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});

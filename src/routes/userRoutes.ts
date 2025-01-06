@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
   changePassword,
+  deleteAccount,
   followUser,
   getSocketPass,
   hydrateUser,
@@ -45,6 +46,7 @@ userRouter
   .delete("/:username/follow", errorCatch(unFollowUser))
   .get("/notifications", errorCatch(getUsersNotifications))
   .put("/notifications/:id/read", errorCatch(markAsRead))
-  .put("/notifications/read-all", errorCatch(markAllAsRead));
+  .put("/notifications/read-all", errorCatch(markAllAsRead))
+  .post("/delete-account", errorCatch(deleteAccount));
 
 export default userRouter;

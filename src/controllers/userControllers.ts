@@ -1,10 +1,12 @@
 import {
   aboutSchema,
   changePasswordSchema,
+  deleteAccountSchema,
   displayNameSchema,
 } from "../lib/bodyValidation/userProfile";
 import { Request, Response } from "express";
 import { User } from "../models/userModel";
+import { DeletedUsers } from "../models/deletedUserModel";
 import { CustomError } from "../lib/customErrors";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
@@ -12,6 +14,7 @@ import { ENV } from "../configs/env";
 import { Follows } from "../models/followModel";
 import jwt from "jsonwebtoken";
 import { createFollowNotification } from "./notifcationController";
+import { sendDeleteAccountMail } from "../lib/mailSender";
 
 export const updateDisplayName = async (req: Request, res: Response) => {
   const { displayName } = displayNameSchema.parse(req.body);
@@ -201,4 +204,34 @@ export const getSocketPass = async (req: Request, res: Response) => {
   const pass = jwt.sign({ id: user._id }, ENV.JWT_SOCKET_SECRET);
 
   res.standardResponse(200, "Socket pass generated", { pass });
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  const { username, password } = deleteAccountSchema.parse(req.body);
+  const user = await User.findById(req.user);
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+
+  const validUsername = user.username === username;
+
+  if (!validUsername) {
+    throw new CustomError("Username is Incorrect!", 400);
+  }
+
+  const validPassword = await bcrypt.compare(password, user.password);
+
+  if (!validPassword) {
+    throw new CustomError("Password is Incorrect!", 400);
+  }
+
+  await DeletedUsers.create(user.toObject()); // save user data to deleted users collection
+  await user.deleteOne(); // delete user from users collection
+
+  res.clearCookie("token");
+  res.clearCookie("refreshToken");
+
+  await sendDeleteAccountMail(user.email);
+
+  res.standardResponse(200, "Account deleted");
 };
