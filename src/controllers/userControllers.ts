@@ -13,7 +13,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { ENV } from "../configs/env";
 import { Follows } from "../models/followModel";
 import jwt from "jsonwebtoken";
-import { createFollowNotification } from "./notifcationController";
+import { createFollowNotification } from "./notificationController";
 import { sendDeleteAccountMail } from "../lib/mailSender";
 
 export const updateDisplayName = async (req: Request, res: Response) => {

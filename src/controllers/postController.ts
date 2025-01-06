@@ -9,7 +9,7 @@ import { Draft, Post } from "../models/postModel";
 import { Request, Response } from "express";
 import { Reaction } from "../models/reactionModel";
 import { CustomError } from "../lib/customErrors";
-import { createLikeNotification } from "./notifcationController";
+import { createLikeNotification } from "./notificationController";
 
 export const createTextPost = async (req: Request, res: Response) => {
   const { title, body, community } = textPostValidation.parse(req.body);

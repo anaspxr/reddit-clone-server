@@ -9,7 +9,7 @@ import { CustomError } from "../lib/customErrors";
 import {
   createCommentNotification,
   createLikeNotification,
-} from "./notifcationController";
+} from "./notificationController";
 
 export const createComment = async (req: Request, res: Response) => {
   const { body, postId, parentComment } = createCommentSchema.parse(req.body);

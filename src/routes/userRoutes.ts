@@ -18,7 +18,7 @@ import {
   getUsersNotifications,
   markAllAsRead,
   markAsRead,
-} from "../controllers/notifcationController";
+} from "../controllers/notificationController";
 
 const userRouter = Router();
 
