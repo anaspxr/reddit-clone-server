@@ -5,7 +5,7 @@ import mongoose, { model, Schema } from "mongoose";
 interface ICommunityRelationModel {
   community: Schema.Types.ObjectId;
   user: Schema.Types.ObjectId;
-  role: "admin" | "moderator" | "member" | "follower";
+  role: "admin" | "moderator" | "member" | "pending";
 }
 
 const communityRelationSchema = new Schema<ICommunityRelationModel>(

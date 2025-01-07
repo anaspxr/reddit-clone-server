@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { verifyAuthorization } from "../middlewares/verifyAuthorization";
 import {
+  acceptJoinRequest,
+  cancelJoinRequest,
   changeBanner,
+  changeCommunityType,
   changeDescription,
   changeDisplayName,
   changeIcon,
@@ -9,9 +12,11 @@ import {
   createCommunity,
   getCommunityMembers,
   getJoinedCommunities,
+  getJoinRequestsCount,
   joinCommunity,
   kickMember,
   leaveCommunity,
+  rejectJoinRequest,
 } from "../controllers/communityControllers";
 import errorCatch from "../lib/errorCatch";
 import {
@@ -35,6 +40,13 @@ communityRoutes
   .get("/joined", errorCatch(getJoinedCommunities))
   .post("/join", errorCatch(joinCommunity))
   .post("/leave", errorCatch(leaveCommunity))
+  .post("/cancel-request", errorCatch(cancelJoinRequest))
+  .get("/:communityName/members", errorCatch(getCommunityMembers))
+  .get(
+    "/:communityName/members/requests/count",
+    errorCatch(getJoinRequestsCount)
+  )
+  // community settings
   .put("/:communityName/displayname", errorCatch(changeDisplayName))
   .put("/:communityName/description", errorCatch(changeDescription))
   .put(
@@ -49,7 +61,15 @@ communityRoutes
     uploadSingleImage(1500, 500, "banners"),
     errorCatch(changeBanner)
   )
-  .get("/:communityName/members", errorCatch(getCommunityMembers))
+  .put("/:communityName/type", errorCatch(changeCommunityType))
+  .put(
+    "/:communityName/members/:username/accept",
+    errorCatch(acceptJoinRequest)
+  )
+  .put(
+    "/:communityName/members/:username/reject",
+    errorCatch(rejectJoinRequest)
+  )
   .delete("/:communityName/members/:username", errorCatch(kickMember));
 
 export default communityRoutes;

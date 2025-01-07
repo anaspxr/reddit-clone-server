@@ -9,6 +9,7 @@ import { Request, Response } from "express";
 import { User } from "../models/userModel";
 import { displayNameSchema } from "../lib/bodyValidation/userProfile";
 import { hasCommunityAccess } from "../lib/utils/hasCommunityAccess";
+import { CustomError } from "../lib/customErrors";
 
 export const createCommunity = async (req: Request, res: Response) => {
   const { name, description, type } = createCommunitySchema.parse(req.body);
@@ -34,12 +35,6 @@ export const createCommunity = async (req: Request, res: Response) => {
 // check if the community name is already taken
 export const checkCommunityName = async (req: Request, res: Response) => {
   const { name } = communityNameSchema.parse(req.query);
-
-  if (!name) {
-    res.standardResponse(400, "Community name is required!");
-    return;
-  }
-
   const community = await Community.findOne({ name });
 
   if (community) {
@@ -61,7 +56,6 @@ export const getJoinedCommunities = async (req: Request, res: Response) => {
 
 export const joinCommunity = async (req: Request, res: Response) => {
   const { name } = communityNameSchema.parse(req.body);
-
   const community = await Community.findOne({ name });
 
   if (!community) {
@@ -74,17 +68,30 @@ export const joinCommunity = async (req: Request, res: Response) => {
     user: req.user,
   });
 
-  if (relation) {
+  if (relation?.role) {
+    if (relation.role === "pending") {
+      res.standardResponse(400, "Request already sent to join community!");
+    }
     res.standardResponse(400, "User already in community!");
+  }
+
+  // if community is private or restricted, send request to join
+  if (community.type === "private" || community.type === "restricted") {
+    await CommunityRelation.create({
+      community: community._id,
+      user: req.user,
+      role: "pending",
+    });
+    res.standardResponse(201, "Request sent to join community!");
     return;
   }
 
+  // if community is public, user can join directly
   await CommunityRelation.create({
     community: community._id,
     user: req.user,
     role: "member",
   });
-
   res.standardResponse(201, "User joined community!");
 };
 
@@ -94,8 +101,7 @@ export const leaveCommunity = async (req: Request, res: Response) => {
     name,
   });
   if (!community) {
-    res.standardResponse(404, "Community not found");
-    return;
+    throw new CustomError("Community not found!", 404);
   }
 
   await CommunityRelation.deleteOne({
@@ -106,13 +112,31 @@ export const leaveCommunity = async (req: Request, res: Response) => {
   res.standardResponse(200, "User left community");
 };
 
+export const cancelJoinRequest = async (req: Request, res: Response) => {
+  const { name } = communityNameSchema.parse(req.body);
+  const community = await Community.findOne({
+    name,
+  });
+  if (!community) {
+    throw new CustomError("Community not found!", 404);
+  }
+
+  await CommunityRelation.deleteOne({
+    community: community._id,
+    user: req.user,
+    role: "pending",
+  });
+
+  res.standardResponse(200, "Request cancelled");
+};
+
 export const kickMember = async (req: Request, res: Response) => {
   const { communityName, username } = kickMemberSchema.parse(req.params);
   const { community } = await hasCommunityAccess(communityName, req.user);
 
   const user = await User.findOne({ username });
   if (!user) {
-    res.standardResponse(404, "User not found");
+    throw new CustomError("User not found!", 404);
     return;
   }
 
@@ -177,4 +201,68 @@ export const getCommunityMembers = async (req: Request, res: Response) => {
     ...community.toObject(),
     members,
   });
+};
+
+export const changeCommunityType = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+  const { type } = req.body;
+
+  await community.updateOne({
+    type,
+  });
+
+  res.standardResponse(200, `Community type updated to ${type}`);
+};
+
+export const acceptJoinRequest = async (req: Request, res: Response) => {
+  const { communityName, username } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw new CustomError("User not found!", 404);
+  }
+
+  const relation = await CommunityRelation.findOne({
+    community: community._id,
+    user: user._id,
+  });
+  if (!relation) {
+    throw new CustomError("Cannot find user request!", 400);
+  }
+
+  await relation.updateOne({ role: "member" });
+
+  res.standardResponse(200, "User accepted in community!");
+};
+
+export const rejectJoinRequest = async (req: Request, res: Response) => {
+  const { communityName, username } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw new CustomError("User not found!", 404);
+  }
+
+  await CommunityRelation.deleteOne({
+    community: community._id,
+    user: user._id,
+    role: "pending",
+  });
+
+  res.standardResponse(200, "User request rejected!");
+};
+
+export const getJoinRequestsCount = async (req: Request, res: Response) => {
+  const { communityName } = req.params;
+  const { community } = await hasCommunityAccess(communityName, req.user);
+
+  const count = await CommunityRelation.countDocuments({
+    community: community._id,
+    role: "pending",
+  });
+
+  res.standardResponse(200, "Join requests count", count);
 };
