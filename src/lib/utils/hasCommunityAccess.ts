@@ -52,3 +52,37 @@ export const canViewPost = async (communityName: string, userId?: string) => {
 
   return { community };
 };
+
+export const canPostInCommunity = async (
+  communityName?: string | null,
+  userId?: string
+) => {
+  if (!communityName) {
+    return { community: null };
+  }
+
+  const community = await Community.findOne({
+    name: communityName,
+  });
+
+  if (!community) {
+    throw new CustomError("Community not found", 404);
+  }
+
+  if (community.type === "public") return { community };
+
+  const userRole = await CommunityRelation.findOne({
+    community: community._id,
+    user: userId,
+  });
+
+  if (!userRole || userRole.role === "pending") {
+    // if user is not a member of the community
+    throw new CustomError(
+      `You are not a member of this ${community.type} community!!`,
+      403
+    );
+  }
+
+  return { community, userRole };
+};

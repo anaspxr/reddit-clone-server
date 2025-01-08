@@ -3,24 +3,28 @@ import {
   postReactSchema,
   textPostValidation,
 } from "../lib/bodyValidation/post";
-import { Community } from "../models/communityModel";
 import { CommunityRelation } from "../models/communityRelationModel";
 import { Draft, Post } from "../models/postModel";
 import { Request, Response } from "express";
 import { Reaction } from "../models/reactionModel";
 import { CustomError } from "../lib/customErrors";
 import { createLikeNotification } from "./notificationController";
+import { canPostInCommunity } from "../lib/utils/hasCommunityAccess";
 
 export const createTextPost = async (req: Request, res: Response) => {
-  const { title, body, community } = textPostValidation.parse(req.body);
+  const {
+    title,
+    body,
+    community: communityName,
+  } = textPostValidation.parse(req.body);
 
-  const communityExists = await Community.exists({ name: community });
+  const { community } = await canPostInCommunity(communityName, req.user);
 
   const newPost = await Post.create({
     title,
     type: "text",
     body,
-    community: communityExists ? communityExists._id : undefined,
+    community: community ? community._id : undefined,
     creator: req.user,
   });
 
@@ -41,18 +45,21 @@ export const saveDraftTextPost = async (req: Request, res: Response) => {
 };
 
 export const createMediaPost = async (req: Request, res: Response) => {
-  const { title, images, video, community } = mediaPostValidation.parse(
-    req.body
-  );
+  const {
+    title,
+    images,
+    video,
+    community: communityName,
+  } = mediaPostValidation.parse(req.body);
 
-  const communityExists = await Community.exists({ name: community });
+  const { community } = await canPostInCommunity(communityName, req.user);
 
   const newPost = await Post.create({
     title,
     type: "media",
     images,
     video,
-    community: communityExists ? communityExists._id : undefined,
+    community: community ? community._id : undefined,
     creator: req.user,
   });
 
