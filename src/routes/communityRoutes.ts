@@ -16,7 +16,9 @@ import {
   joinCommunity,
   kickMember,
   leaveCommunity,
+  makeModerator,
   rejectJoinRequest,
+  revokeModerator,
 } from "../controllers/communityControllers";
 import errorCatch from "../lib/errorCatch";
 import {
@@ -62,6 +64,11 @@ communityRoutes
     errorCatch(changeBanner)
   )
   .put("/:communityName/type", errorCatch(changeCommunityType))
+  .put("/:communityName/members/:username/moderator", errorCatch(makeModerator))
+  .delete(
+    "/:communityName/members/:username/moderator",
+    errorCatch(revokeModerator)
+  )
   .put(
     "/:communityName/members/:username/accept",
     errorCatch(acceptJoinRequest)

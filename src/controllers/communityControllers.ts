@@ -215,6 +215,64 @@ export const changeCommunityType = async (req: Request, res: Response) => {
   res.standardResponse(200, `Community type updated to ${type}`);
 };
 
+export const makeModerator = async (req: Request, res: Response) => {
+  const { communityName, username } = req.params;
+  const { community, userRole } = await hasCommunityAccess(
+    communityName,
+    req.user
+  );
+
+  if (userRole.role !== "admin") {
+    throw new CustomError("Only admins can do this action!", 403);
+  }
+
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw new CustomError("User not found!", 404);
+  }
+
+  const relation = await CommunityRelation.findOne({
+    community: community._id,
+    user: user._id,
+  });
+  if (!relation) {
+    throw new CustomError("User not in community!", 400);
+  }
+
+  await relation.updateOne({ role: "moderator" });
+
+  res.standardResponse(200, "User is now a moderator!");
+};
+
+export const revokeModerator = async (req: Request, res: Response) => {
+  const { communityName, username } = req.params;
+  const { community, userRole } = await hasCommunityAccess(
+    communityName,
+    req.user
+  );
+
+  if (userRole.role !== "admin") {
+    throw new CustomError("Only admins can do this action!", 403);
+  }
+
+  const user = await User.findOne({ username });
+  if (!user) {
+    throw new CustomError("User not found!", 404);
+  }
+
+  const relation = await CommunityRelation.findOne({
+    community: community._id,
+    user: user._id,
+  });
+  if (!relation) {
+    throw new CustomError("User not in community!", 400);
+  }
+
+  await relation.updateOne({ role: "member" });
+
+  res.standardResponse(200, "User is now a member!");
+};
+
 export const acceptJoinRequest = async (req: Request, res: Response) => {
   const { communityName, username } = req.params;
   const { community } = await hasCommunityAccess(communityName, req.user);

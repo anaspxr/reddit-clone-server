@@ -10,6 +10,7 @@ import { Reaction } from "../models/reactionModel";
 import { Comment } from "../models/commentModel";
 import { getCommentsWithVotes } from "../lib/utils/getCommentsWithVotes";
 import mongoose from "mongoose";
+import { canViewPost } from "../lib/utils/hasCommunityAccess";
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -105,14 +106,7 @@ export const getPosts = async (req: Request, res: Response) => {
 export const getCommunityPosts = async (req: Request, res: Response) => {
   const { name } = req.params;
 
-  const community = await Community.findOne({
-    name,
-  });
-
-  if (!community) {
-    res.standardResponse(404, "Community not found");
-    return;
-  }
+  const { community } = await canViewPost(name, req.user);
 
   const posts = await getPostsWithVotes(
     [

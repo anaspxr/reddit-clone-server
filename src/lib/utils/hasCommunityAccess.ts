@@ -27,3 +27,28 @@ export const hasCommunityAccess = async (
 
   return { community, userRole };
 };
+
+export const canViewPost = async (communityName: string, userId?: string) => {
+  const community = await Community.findOne({
+    name: communityName,
+  });
+
+  if (!community) {
+    throw new CustomError("Community not found", 404);
+  }
+
+  // if community is public or restricted then user can view the post
+  if (community.type !== "private") return { community };
+
+  const userRole = await CommunityRelation.findOne({
+    community: community._id,
+    user: userId,
+  });
+
+  if (!userRole || userRole.role === "pending") {
+    // if user is not a member of the community
+    throw new CustomError("Unauthorized", 403, "PRIVATE_COMMUNITY");
+  }
+
+  return { community };
+};
