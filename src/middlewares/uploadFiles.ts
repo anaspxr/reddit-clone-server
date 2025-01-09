@@ -104,7 +104,7 @@ export const uploadMultiple = async (
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: "auto",
-          folder: "test",
+          folder: ENV.CLOUDINARY.FOLDER,
         },
         (error, result) => {
           if (error) {
