@@ -198,11 +198,21 @@ export const getPost = async (req: Request, res: Response) => {
 
   const post = await Post.findById(postId)
     .populate("creator", "username avatar displayName")
-    .populate("community", "name icon");
+    .populate<{
+      community: {
+        name: string;
+        icon: string;
+      };
+    }>("community", "name icon");
 
   if (!post) {
     res.standardResponse(404, "Post not found");
     return;
+  }
+
+  // Check if the post is in a private community and if the user has access
+  if (post?.community) {
+    await canViewPost(post.community.name, req.user);
   }
 
   const userReaction = (

@@ -94,6 +94,43 @@ export const getPostsWithVotes = async (
         commentCount: { $size: "$comments" },
       },
     },
+
+    // Check if the user is a member of the community where the post is published
+    {
+      $lookup: {
+        from: "communityrelations",
+        let: { communityId: "$community._id", userId: userObjectId },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$community", "$$communityId"] },
+                  { $eq: ["$user", "$$userId"] },
+                  { $ne: ["$role", "pending"] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "membership",
+      },
+    },
+    {
+      $addFields: {
+        isPrivate: { $eq: ["$community.type", "private"] }, // Check if the community type is "private"
+        isMember: { $gt: [{ $size: "$membership" }, 0] }, // Check membership status
+      },
+    },
+    {
+      $match: {
+        $or: [
+          { "community._id": null }, // Posts without a community
+          { isPrivate: false }, // Public or restricted communities
+          { $and: [{ isPrivate: true }, { isMember: true }] }, // Private communities with membership
+        ],
+      },
+    },
     {
       $project: {
         creator: {
