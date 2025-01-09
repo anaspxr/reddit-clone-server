@@ -450,3 +450,37 @@ export const searchUsers = async (req: Request, res: Response) => {
 
   res.standardResponse(200, "Search results", users);
 };
+
+export const getPopularCommunities = async (req: Request, res: Response) => {
+  const userJoinedCommunities = await CommunityRelation.find({
+    user: req.user,
+  }).distinct("community");
+
+  const communities = await Community.aggregate([
+    { $match: { _id: { $nin: userJoinedCommunities } } },
+    {
+      $lookup: {
+        from: "communityrelations",
+        localField: "_id",
+        foreignField: "community",
+        as: "communityRelations",
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        displayName: 1,
+        icon: 1,
+        banner: 1,
+        description: 1,
+        memberCount: {
+          $size: "$communityRelations",
+        },
+      },
+    },
+    { $sort: { memberCount: -1 } },
+    { $limit: 5 },
+  ]);
+
+  res.standardResponse(200, "Communities retrieved", communities);
+};
