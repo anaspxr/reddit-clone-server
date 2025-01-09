@@ -3,7 +3,8 @@ import { Comment } from "../../models/commentModel";
 
 export const getCommentsWithVotes = async (
   initialStages: PipelineStage[] = [],
-  user?: string
+  user?: string,
+  finalStages: PipelineStage[] = []
 ) => {
   const userObjectId = user ? new mongoose.Types.ObjectId(user) : null;
   const comments = await Comment.aggregate([
@@ -82,6 +83,7 @@ export const getCommentsWithVotes = async (
         updatedAt: 1,
       },
     },
+    ...finalStages,
   ]);
   return comments;
 };

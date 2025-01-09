@@ -11,6 +11,8 @@ import { Comment } from "../models/commentModel";
 import { getCommentsWithVotes } from "../lib/utils/getCommentsWithVotes";
 import mongoose from "mongoose";
 import { canViewPost } from "../lib/utils/hasCommunityAccess";
+import { SortTypes } from "../lib/types";
+import getSortStages from "../lib/utils/getSortStage";
 
 export const getUserProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -74,6 +76,7 @@ export const getCommunity = async (req: Request, res: Response) => {
 
 export const getUserPosts = async (req: Request, res: Response) => {
   const { username } = req.params;
+  const sort = req.query.sort as SortTypes | undefined;
 
   const user = await User.findOne({ username });
   if (!user) {
@@ -86,9 +89,9 @@ export const getUserPosts = async (req: Request, res: Response) => {
       {
         $match: { creator: user._id },
       },
-      { $sort: { createdAt: -1 } },
     ],
-    req.user
+    req.user,
+    getSortStages(sort || "recent")
   );
 
   res.standardResponse(200, "Posts retrieved", posts);
@@ -105,6 +108,7 @@ export const getPosts = async (req: Request, res: Response) => {
 
 export const getCommunityPosts = async (req: Request, res: Response) => {
   const { name } = req.params;
+  const sort = req.query.sort as SortTypes | undefined;
 
   const { community } = await canViewPost(name, req.user);
 
@@ -115,7 +119,8 @@ export const getCommunityPosts = async (req: Request, res: Response) => {
       },
       { $sort: { createdAt: -1 } },
     ],
-    req.user
+    req.user,
+    getSortStages(sort || "recent")
   );
 
   res.standardResponse(200, "Posts retrieved", posts);
@@ -144,25 +149,35 @@ export const search = async (req: Request, res: Response) => {
 };
 
 export const getFeed = async (req: Request, res: Response) => {
-  const { type } = req.query;
+  const sort = req.query.sort as SortTypes | undefined;
 
   const user = req.user;
 
   let feed = [];
 
-  if (type === "popular") {
+  if (sort) {
     feed = await getPostsWithVotes([], req.user, [
-      { $sort: { upvotes: -1 } },
+      ...getSortStages(sort),
       { $limit: 10 },
     ]);
   } else if (user) {
+    const userFollows = (await Follows.find({ follower: user })).map(
+      ({ following }) => following
+    );
     const userCommunities = (await CommunityRelation.find({ user })).map(
       ({ community }) => community
     );
     feed = await getPostsWithVotes(
       [
         {
-          $match: { community: { $in: userCommunities } },
+          $match: {
+            $or: [
+              { community: { $in: userCommunities } },
+              {
+                creator: { $in: userFollows },
+              },
+            ],
+          },
         },
         { $sort: { createdAt: -1 } },
         { $limit: 10 },
@@ -171,7 +186,7 @@ export const getFeed = async (req: Request, res: Response) => {
     );
   } else {
     feed = await getPostsWithVotes(
-      [{ $sort: { createdAt: -1 } }, { $limit: 10 }],
+      [...getSortStages("week"), { $limit: 10 }],
       req.user
     );
   }
@@ -220,6 +235,7 @@ export const getPost = async (req: Request, res: Response) => {
 
 export const getCommentsOfPost = async (req: Request, res: Response) => {
   const { postId } = req.params;
+  const sort = req.query.sort as SortTypes | undefined;
 
   const comments = await getCommentsWithVotes(
     [
@@ -229,9 +245,9 @@ export const getCommentsOfPost = async (req: Request, res: Response) => {
           parentComment: { $exists: false },
         },
       },
-      { $sort: { createdAt: -1 } },
     ],
-    req.user
+    req.user,
+    getSortStages(sort || "recent")
   );
   res.standardResponse(200, "Comments fetched", comments);
 };
@@ -298,6 +314,7 @@ export const getCommunities = async (req: Request, res: Response) => {
 
 export const getUserComments = async (req: Request, res: Response) => {
   const { username } = req.params;
+  const sort = req.query.sort as SortTypes | undefined;
 
   const user = await User.findOne({ username });
 
@@ -311,9 +328,9 @@ export const getUserComments = async (req: Request, res: Response) => {
       {
         $match: { creator: user._id },
       },
-      { $sort: { createdAt: -1 } },
     ],
-    req.user
+    req.user,
+    getSortStages(sort || "recent")
   );
 
   res.standardResponse(200, "Comments retrieved", comments);

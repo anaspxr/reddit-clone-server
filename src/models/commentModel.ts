@@ -8,29 +8,30 @@ interface IComment {
   createdAt: Date;
 }
 
-const commentSchema = new Schema<IComment>({
-  body: {
-    type: String,
-    required: true,
+const commentSchema = new Schema<IComment>(
+  {
+    body: {
+      type: String,
+      required: true,
+    },
+    creator: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    post: {
+      type: mongoose.Types.ObjectId,
+      ref: "Post",
+      required: true,
+    },
+    parentComment: {
+      type: mongoose.Types.ObjectId,
+      ref: "Comment",
+    },
   },
-  creator: {
-    type: mongoose.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  post: {
-    type: mongoose.Types.ObjectId,
-    ref: "Post",
-    required: true,
-  },
-  parentComment: {
-    type: mongoose.Types.ObjectId,
-    ref: "Comment",
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
 
 export const Comment = mongoose.model("Comment", commentSchema);

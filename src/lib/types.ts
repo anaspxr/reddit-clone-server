@@ -7,3 +7,5 @@ export interface CustomResponse extends Response {
     data?: unknown
   ) => void;
 }
+
+export type SortTypes = "week" | "month" | "allTime" | "recent";
