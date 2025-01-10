@@ -171,8 +171,19 @@ export const userLogin = async (req: Request, res: Response) => {
 
 //
 export const userLogout = async (req: Request, res: Response) => {
-  res.clearCookie("token");
-  res.clearCookie("refreshToken");
+  res.cookie("token", "", {
+    maxAge: 0,
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+
+  res.cookie("refreshToken", "", {
+    maxAge: 0,
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
 
   res.standardResponse(200, "User logged out");
 };
