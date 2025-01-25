@@ -28,13 +28,14 @@ This project was developed to explore and demonstrate the core functionalities o
  - Socket.io
 
  ### Frontend:
- - Next.js
- - TypeScript
- - Tailwind CSS
- - Axios
- - Redux
- - Tanstack Query
- - Socket.io
+ 
+  - Next.js
+  - TypeScript
+  - Tailwind CSS
+  - Axios
+  - Redux
+  - Tanstack Query
+  - Socket.io
 
 
 
